@@ -111,3 +111,7 @@ db.sqlite3
 *.temp
 tmp/
 temp/
+
+# En server/.gitignore
+config/credentials.json
+*.env
