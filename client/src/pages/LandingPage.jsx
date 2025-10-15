@@ -19,7 +19,7 @@ const LandingPage = () => {
 
       {/* Contenido principal */}
       <div className="main-content-landing">
-        {/* Elemento principal: Cerebro e Insight */}
+        {/* Elemento principal: Arbol e Insight */}
         <div className="hero-section-landing">
           <div className="brain-container has-custom-image">
             {/* Árbol animado con hojas cayendo */}
@@ -32,85 +32,56 @@ const LandingPage = () => {
                 <div className="trunk-texture"></div>
               </div>
               
-              {/* Copa del árbol realista */}
+              {/* Copa del árbol realista - Forma ovalada */}
               <div className="tree-crown">
-                <div className="foliage-cluster cluster-center"></div>
-                <div className="foliage-cluster cluster-left-top"></div>
-                <div className="foliage-cluster cluster-right-top"></div>
-                <div className="foliage-cluster cluster-left-middle"></div>
-                <div className="foliage-cluster cluster-right-middle"></div>
-                <div className="foliage-cluster cluster-top-small"></div>
+                {/* Cluster central principal */}
+                <div className="foliage-cluster cluster-center-main"></div>
                 
-                {/* Más clusters para densidad */}
-                <div className="foliage-cluster cluster-extra-1"></div>
-                <div className="foliage-cluster cluster-extra-2"></div>
-                <div className="foliage-cluster cluster-extra-3"></div>
-                <div className="foliage-cluster cluster-extra-4"></div>
-                <div className="foliage-cluster cluster-extra-5"></div>
-                <div className="foliage-cluster cluster-extra-6"></div>
-                <div className="foliage-cluster cluster-extra-7"></div>
-                <div className="foliage-cluster cluster-extra-8"></div>
+                {/* Clusters superiores para la parte alta del óvalo */}
+                <div className="foliage-cluster cluster-top-left"></div>
+                <div className="foliage-cluster cluster-top-center"></div>
+                <div className="foliage-cluster cluster-top-right"></div>
+                <div className="foliage-cluster cluster-top-far-left"></div>
+                <div className="foliage-cluster cluster-top-far-right"></div>
+                <div className="foliage-cluster cluster-top-edge-left"></div>
+                <div className="foliage-cluster cluster-top-edge-right"></div>
+                <div className="foliage-cluster cluster-top-border-center"></div>
                 
-                {/* Clusters adicionales para mayor frondosidad */}
-                <div className="foliage-cluster cluster-dense-2"></div>
-                <div className="foliage-cluster cluster-dense-3"></div>
-                <div className="foliage-cluster cluster-dense-5"></div>
-                <div className="foliage-cluster cluster-dense-6"></div>
-                <div className="foliage-cluster cluster-dense-8"></div>
+                {/* Clusters medios para la parte más ancha del óvalo */}
+                <div className="foliage-cluster cluster-middle-left"></div>
+                <div className="foliage-cluster cluster-middle-right"></div>
+                <div className="foliage-cluster cluster-middle-far-left"></div>
+                <div className="foliage-cluster cluster-middle-far-right"></div>
+                <div className="foliage-cluster cluster-middle-center-left"></div>
+                <div className="foliage-cluster cluster-middle-center-right"></div>
                 
-                {/* Clusters centrales para conectar las agrupaciones principales */}
-                <div className="foliage-cluster cluster-center-1"></div>
-                <div className="foliage-cluster cluster-center-2"></div>
-                <div className="foliage-cluster cluster-center-3"></div>
-                <div className="foliage-cluster cluster-center-5"></div>
-                <div className="foliage-cluster cluster-center-7"></div>
+                {/* Clusters de relleno para densidad ovalada */}
+                <div className="foliage-cluster cluster-fill-1"></div>
+                <div className="foliage-cluster cluster-fill-2"></div>
+                <div className="foliage-cluster cluster-fill-7"></div>
+                <div className="foliage-cluster cluster-fill-8"></div>
                 
-                {/* Clusters verticales centrales para forma triangular */}
-                <div className="foliage-cluster cluster-vertical-1"></div>
-                <div className="foliage-cluster cluster-vertical-2"></div>
-                <div className="foliage-cluster cluster-vertical-4"></div>
-                <div className="foliage-cluster cluster-vertical-5"></div>
-                <div className="foliage-cluster cluster-vertical-6"></div>
-                <div className="foliage-cluster cluster-vertical-8"></div>
-                <div className="foliage-cluster cluster-vertical-10"></div>
+                {/* Clusters adicionales para perfeccionar la forma ovalada */}
+                <div className="foliage-cluster cluster-oval-1"></div>
+                <div className="foliage-cluster cluster-oval-2"></div>
+                <div className="foliage-cluster cluster-oval-3"></div>
+                <div className="foliage-cluster cluster-oval-4"></div>
+                <div className="foliage-cluster cluster-oval-5"></div>
+                <div className="foliage-cluster cluster-oval-6"></div>
+                <div className="foliage-cluster cluster-oval-7"></div>
+                <div className="foliage-cluster cluster-oval-8"></div>
                 
-                {/* Clusters superiores que sobresalen del centro */}
-                <div className="foliage-cluster cluster-peak-1"></div>
-                <div className="foliage-cluster cluster-peak-2"></div>
-                <div className="foliage-cluster cluster-peak-3"></div>
-                <div className="foliage-cluster cluster-peak-4"></div>
-                <div className="foliage-cluster cluster-peak-5"></div>
-                <div className="foliage-cluster cluster-peak-6"></div>
+                {/* Clusters de transición copa-tronco */}
+                <div className="foliage-cluster cluster-transition-1"></div>
+                <div className="foliage-cluster cluster-transition-2"></div>
+                <div className="foliage-cluster cluster-transition-3"></div>
                 
-                {/* Clusters adicionales para reforzar el pico izquierdo */}
-                <div className="foliage-cluster cluster-left-peak-1"></div>
-                <div className="foliage-cluster cluster-left-peak-2"></div>
-                <div className="foliage-cluster cluster-left-peak-3"></div>
-                <div className="foliage-cluster cluster-left-peak-4"></div>
-                
-                {/* Hojas individuales dispersas */}
-                <div className="scattered-leaves">
-                  <div className="leaf-detail leaf-1"></div>
-                  <div className="leaf-detail leaf-2"></div>
-                  <div className="leaf-detail leaf-3"></div>
-                  <div className="leaf-detail leaf-4"></div>
-                  <div className="leaf-detail leaf-5"></div>
-                  <div className="leaf-detail leaf-6"></div>
-                  <div className="leaf-detail leaf-7"></div>
-                  <div className="leaf-detail leaf-8"></div>
-                  <div className="leaf-detail leaf-9"></div>
-                  <div className="leaf-detail leaf-10"></div>
-                  <div className="leaf-detail leaf-11"></div>
-                  <div className="leaf-detail leaf-12"></div>
-                  <div className="leaf-detail leaf-13"></div>
-                  <div className="leaf-detail leaf-14"></div>
-                  <div className="leaf-detail leaf-15"></div>
-                  <div className="leaf-detail leaf-16"></div>
-                  <div className="leaf-detail leaf-17"></div>
-                  <div className="leaf-detail leaf-18"></div>
-                  <div className="leaf-detail leaf-19"></div>
-                  <div className="leaf-detail leaf-20"></div>
-                </div>
+                {/* Clusters adicionales para eliminar huecos */}
+                <div className="foliage-cluster cluster-gap-fill-1"></div>
+                <div className="foliage-cluster cluster-gap-fill-2"></div>
+                <div className="foliage-cluster cluster-gap-fill-3"></div>
+                <div className="foliage-cluster cluster-gap-fill-4"></div>
+                <div className="foliage-cluster cluster-gap-fill-7"></div>
               </div>
               
               {/* Hojas cayendo */}
@@ -135,30 +106,26 @@ const LandingPage = () => {
               </div>
             </div>
             
-            {/* Ilustración del cerebro CSS (se oculta automáticamente) */}
-            <div className="brain-illustration">
-              <div className="brain-connection"></div>
-              <div className="brain-glow"></div>
-            </div>
-            
             {/* Título principal superpuesto */}
             <h1 className="main-title">Insight</h1>
           </div>
           
           {/* Texto introductorio */}
           <p className="intro-text">
-            Plataforma de análisis y visualización de datos sobre salud mental
+             Transformando datos en conocimiento para comprender mejor la mente humana.
           </p>
         </div>
+
+        {/* Espacio entre intro y primer cuadro */}
+        <div className="section-spacer"></div>
 
         {/* Sección "Nuestro objetivo" */}
         <div className="objective-section">
           <div className="content-card">
-            <h2>Nuestro objetivo</h2>
+            <h2>Nuestro objetivo 🎯</h2>
             <p>
-              Nuestro objetivo es acercar la comprensión de los datos de salud mental 
-              a través de herramientas accesibles e intuitivas que permitan a profesionales, 
-              investigadores y organizaciones tomar decisiones informadas.
+              Nuestro objetivo es acercar la comprensión de los datos de salud mental mediante herramientas de inteligencia artificial y visualización accesibles, intuitivas y seguras.
+              Buscamos facilitar el trabajo de profesionales, investigadores y organizaciones, promoviendo un uso ético y responsable de los datos clínicos reales
             </p>
           </div>
         </div>
@@ -166,18 +133,40 @@ const LandingPage = () => {
         {/* Sección "Nuestras herramientas" */}
         <div className="tools-section">
           <div className="content-card">
-            <h2>Nuestras herramientas</h2>
+            <h2>Nuestras herramientas 🧰</h2>
             <p>
-              Explora visualizaciones interactivas, análisis automatizados y comparativas 
-              entre comunidades autónomas y categorías clínicas. Descubre patrones, 
-              tendencias y insights que impulsen la investigación en salud mental.
+              Explora visualizaciones interactivas y análisis comparativos entre comunidades autónomas, categorías clínicas y tendencias temporales.
+Nuestra plataforma combina visualización avanzada, pensamiento analítico y modelos de IA para extraer insights relevantes que impulsen la investigación en salud mental.
             </p>
             <div className="tools-preview">
               <div className="tool-icon">📊</div>
               <div className="tool-icon">🔍</div>
               <div className="tool-icon">🤖</div>
-              <div className="tool-icon">⚙️</div>
             </div>
+          </div>
+        </div>
+
+        {/* Sección "Compromiso ético y social" */}
+        <div className="ethics-section">
+          <div className="content-card">
+            <h2>Compromiso ético y social 🤝</h2>
+            <p>
+              En Insight creemos que la tecnología debe servir al bienestar colectivo.
+              Por ello, garantizamos la anonimización de los datos, el respeto por la privacidad de los pacientes y el uso responsable de la inteligencia artificial en el análisis de salud mental.
+            </p>
+          </div>
+        </div>
+
+        {/* Espacio entre secciones */}
+        <div className="section-spacer"></div>
+
+        {/* Sección "Malackathon 2025" */}
+        <div className="malackathon-section">
+          <div className="content-card">
+            <h2>Malackathon 2025 🚀</h2>
+            <p>
+              Proyecto desarrollado en el marco del Malackathon 2025, con el propósito de aplicar ciencia de datos e IA al análisis de ingresos hospitalarios en salud mental.
+            </p>
           </div>
         </div>
       </div>
