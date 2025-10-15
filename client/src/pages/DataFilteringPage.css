@@ -1,0 +1,652 @@
+/* DataFilteringPage - Solo título y subtítulo */
+
+/* Animaciones de fondo - Hojas y puntos estáticos */
+.background-animations {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+  display: block !important;
+}
+
+/* Elementos estáticos con animación de pulsación sutil */
+.static-element {
+  position: absolute;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  opacity: 0.3;
+  display: block !important;
+}
+
+/* Elementos que caen */
+.falling-element {
+  position: absolute;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  display: block !important;
+}
+
+/* Hojas de diferentes tamaños */
+.static-leaf-large {
+  width: 24px;
+  height: 16px;
+  background: linear-gradient(45deg, rgba(34, 197, 94, 0.4), rgba(22, 163, 74, 0.4));
+  border-radius: 0 100% 0 100%;
+  transform-origin: center;
+}
+
+.static-leaf-medium {
+  width: 18px;
+  height: 12px;
+  background: linear-gradient(45deg, rgba(16, 185, 129, 0.4), rgba(5, 150, 105, 0.4));
+  border-radius: 0 100% 0 100%;
+  transform-origin: center;
+}
+
+.static-leaf-small {
+  width: 12px;
+  height: 8px;
+  background: linear-gradient(45deg, rgba(34, 197, 94, 0.3), rgba(22, 163, 74, 0.3));
+  border-radius: 0 100% 0 100%;
+  transform-origin: center;
+}
+
+/* Puntos de diferentes tamaños */
+.static-dot-large {
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(45deg, rgba(168, 85, 247, 0.4), rgba(139, 92, 246, 0.4));
+  border-radius: 50%;
+  transform-origin: center;
+}
+
+.static-dot-medium {
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(45deg, rgba(219, 112, 147, 0.4), rgba(168, 85, 247, 0.4));
+  border-radius: 50%;
+  transform-origin: center;
+}
+
+.static-dot-small {
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(45deg, rgba(139, 92, 246, 0.3), rgba(168, 85, 247, 0.3));
+  border-radius: 50%;
+  transform-origin: center;
+}
+
+/* Hojas que caen */
+.falling-leaf-large {
+  width: 22px;
+  height: 14px;
+  background: linear-gradient(45deg, rgba(34, 197, 94, 0.8), rgba(22, 163, 74, 0.8));
+  border-radius: 0 100% 0 100%;
+  transform-origin: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.falling-leaf-medium {
+  width: 18px;
+  height: 12px;
+  background: linear-gradient(45deg, rgba(16, 185, 129, 0.7), rgba(5, 150, 105, 0.7));
+  border-radius: 0 100% 0 100%;
+  transform-origin: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+}
+
+.falling-leaf-small {
+  width: 14px;
+  height: 9px;
+  background: linear-gradient(45deg, rgba(34, 197, 94, 0.6), rgba(22, 163, 74, 0.6));
+  border-radius: 0 100% 0 100%;
+  transform-origin: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Animaciones de pulsación suave */
+@keyframes gentle-pulse-1 {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+@keyframes gentle-pulse-2 {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.45;
+  }
+}
+
+@keyframes gentle-pulse-3 {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.4;
+  }
+}
+
+/* Animaciones de hojas cayendo */
+@keyframes leaf-fall-1 {
+  0% {
+    transform: translateY(-100px) translateX(0px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(100vh) translateX(60px) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+@keyframes leaf-fall-2 {
+  0% {
+    transform: translateY(-100px) translateX(0px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(100vh) translateX(-40px) rotate(-120deg);
+    opacity: 0;
+  }
+}
+
+@keyframes leaf-fall-3 {
+  0% {
+    transform: translateY(-100px) translateX(0px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(100vh) translateX(20px) rotate(90deg);
+    opacity: 0;
+  }
+}
+
+/* Asignación de elementos estáticos con pulsación suave */
+.static-element:nth-child(1) { animation: gentle-pulse-1 6s ease-in-out infinite; top: 12%; left: 8%; }
+.static-element:nth-child(2) { animation: gentle-pulse-2 8s ease-in-out infinite; top: 18%; left: 85%; }
+.static-element:nth-child(3) { animation: gentle-pulse-3 7s ease-in-out infinite; top: 25%; left: 15%; }
+.static-element:nth-child(4) { animation: gentle-pulse-1 9s ease-in-out infinite; top: 32%; left: 92%; }
+.static-element:nth-child(5) { animation: gentle-pulse-2 6.5s ease-in-out infinite; top: 38%; left: 5%; }
+.static-element:nth-child(6) { animation: gentle-pulse-3 7.5s ease-in-out infinite; top: 45%; left: 78%; }
+.static-element:nth-child(7) { animation: gentle-pulse-1 8.5s ease-in-out infinite; top: 52%; left: 22%; }
+.static-element:nth-child(8) { animation: gentle-pulse-2 6.8s ease-in-out infinite; top: 58%; left: 88%; }
+.static-element:nth-child(9) { animation: gentle-pulse-3 7.8s ease-in-out infinite; top: 65%; left: 12%; }
+.static-element:nth-child(10) { animation: gentle-pulse-1 8.2s ease-in-out infinite; top: 72%; left: 65%; }
+.static-element:nth-child(11) { animation: gentle-pulse-2 7.2s ease-in-out infinite; top: 78%; left: 35%; }
+.static-element:nth-child(12) { animation: gentle-pulse-3 6.3s ease-in-out infinite; top: 85%; left: 82%; }
+.static-element:nth-child(13) { animation: gentle-pulse-1 8.7s ease-in-out infinite; top: 28%; left: 42%; }
+.static-element:nth-child(14) { animation: gentle-pulse-2 7.7s ease-in-out infinite; top: 48%; left: 58%; }
+.static-element:nth-child(15) { animation: gentle-pulse-3 6.9s ease-in-out infinite; top: 68%; left: 48%; }
+.static-element:nth-child(16) { animation: gentle-pulse-1 8.1s ease-in-out infinite; top: 15%; left: 62%; }
+.static-element:nth-child(17) { animation: gentle-pulse-2 7.3s ease-in-out infinite; top: 35%; left: 28%; }
+.static-element:nth-child(18) { animation: gentle-pulse-3 6.7s ease-in-out infinite; top: 55%; left: 72%; }
+.static-element:nth-child(19) { animation: gentle-pulse-1 8.9s ease-in-out infinite; top: 75%; left: 18%; }
+.static-element:nth-child(20) { animation: gentle-pulse-2 7.1s ease-in-out infinite; top: 22%; left: 38%; }
+.static-element:nth-child(21) { animation: gentle-pulse-3 6.4s ease-in-out infinite; top: 42%; left: 75%; }
+.static-element:nth-child(22) { animation: gentle-pulse-1 8.3s ease-in-out infinite; top: 62%; left: 25%; }
+.static-element:nth-child(23) { animation: gentle-pulse-2 7.6s ease-in-out infinite; top: 82%; left: 55%; }
+.static-element:nth-child(24) { animation: gentle-pulse-3 6.8s ease-in-out infinite; top: 8%; left: 45%; }
+.static-element:nth-child(25) { animation: gentle-pulse-1 8.4s ease-in-out infinite; top: 88%; left: 68%; }
+.static-element:nth-child(26) { animation: gentle-pulse-2 7.4s ease-in-out infinite; top: 12%; left: 75%; }
+.static-element:nth-child(27) { animation: gentle-pulse-3 6.6s ease-in-out infinite; top: 32%; left: 52%; }
+.static-element:nth-child(28) { animation: gentle-pulse-1 8.6s ease-in-out infinite; top: 52%; left: 8%; }
+.static-element:nth-child(29) { animation: gentle-pulse-2 7.9s ease-in-out infinite; top: 72%; left: 88%; }
+.static-element:nth-child(30) { animation: gentle-pulse-3 6.5s ease-in-out infinite; top: 92%; left: 32%; }
+
+/* Asignación de hojas que caen */
+.falling-element:nth-child(31) { animation: leaf-fall-1 20s linear infinite; animation-delay: 0s; left: 15%; }
+.falling-element:nth-child(32) { animation: leaf-fall-2 25s linear infinite; animation-delay: 3s; left: 35%; }
+.falling-element:nth-child(33) { animation: leaf-fall-3 18s linear infinite; animation-delay: 6s; left: 55%; }
+.falling-element:nth-child(34) { animation: leaf-fall-1 22s linear infinite; animation-delay: 9s; left: 75%; }
+.falling-element:nth-child(35) { animation: leaf-fall-2 24s linear infinite; animation-delay: 12s; left: 85%; }
+.falling-element:nth-child(36) { animation: leaf-fall-3 19s linear infinite; animation-delay: 15s; left: 25%; }
+.falling-element:nth-child(37) { animation: leaf-fall-1 21s linear infinite; animation-delay: 18s; left: 65%; }
+.falling-element:nth-child(38) { animation: leaf-fall-2 23s linear infinite; animation-delay: 21s; left: 45%; }
+
+.clean-page {
+  background: linear-gradient(135deg, 
+    rgba(245, 247, 250, 1) 0%,
+    rgba(248, 250, 252, 1) 20%,
+    rgba(219, 112, 147, 0.1) 40%,
+    rgba(168, 85, 247, 0.1) 60%,
+    rgba(139, 92, 246, 0.1) 80%,
+    rgba(248, 250, 252, 1) 100%) !important;
+  min-height: 100vh;
+}
+
+/* Ocultar cualquier elemento que no sea el header */
+.clean-page > *:not(.page-header):not(.filter-section):not(.results-section):not(.background-animations) {
+  display: none !important;
+}
+
+/* Ocultar elementos específicos que puedan aparecer por otros CSS */
+.clean-page .filter-controls,
+.clean-page .filtered-results,
+.clean-page .tool-category,
+.clean-page .tools-grid,
+.clean-page .rectangles-container,
+.clean-page .white-rectangle {
+  display: none !important;
+}
+
+/* Asegurar que el header se vea correctamente */
+.clean-page .page-header {
+  display: block !important;
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  z-index: 10;
+}
+
+.clean-page .page-header h1 {
+  font-size: clamp(3rem, 6vw, 4.5rem);
+  font-weight: 900;
+  margin-bottom: 30px;
+  background: linear-gradient(135deg, 
+    rgba(219, 112, 147, 1) 0%,
+    rgba(168, 85, 247, 1) 50%,
+    rgba(139, 92, 246, 1) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.clean-page .page-header p {
+  font-size: clamp(1.1rem, 3vw, 1.4rem);
+  color: #64748b;
+  font-weight: 400;
+  line-height: 1.6;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Rectángulos principales */
+.filter-section,
+.results-section {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  margin: 30px auto;
+  max-width: 1200px;
+  border: 1px solid rgba(219, 112, 147, 0.1);
+  position: relative;
+  z-index: 10;
+}
+
+.filter-section h2,
+.results-section h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: rgb(168, 85, 247);
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+/* Grupos de filtros */
+.filter-group {
+  margin-bottom: 30px;
+}
+
+.filter-group h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 15px;
+  border-bottom: 2px solid rgba(168, 85, 247, 0.2);
+  padding-bottom: 8px;
+  text-align: center;
+}
+
+/* Comunidades Autónomas - Grid */
+.comunidades-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 10px;
+  padding: 15px;
+  background: linear-gradient(135deg, 
+    rgba(219, 112, 147, 0.05) 0%,
+    rgba(168, 85, 247, 0.05) 50%,
+    rgba(139, 92, 246, 0.05) 100%);
+  justify-items: center;
+}
+
+.comunidades-grid .checkbox-item {
+  gap: 0;
+  padding: 12px 16px;
+  width: 200px;
+  min-height: 50px;
+  text-align: center;
+}
+
+/* Diagnósticos - Grid (mismo formato que comunidades) */
+.diagnosticos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 10px;
+  padding: 15px;
+  background: linear-gradient(135deg, 
+    rgba(219, 112, 147, 0.05) 0%,
+    rgba(168, 85, 247, 0.05) 50%,
+    rgba(139, 92, 246, 0.05) 100%);
+}
+
+/* Espacio extra para diagnósticos */
+.diagnosticos-grid .checkbox-item {
+  gap: 0;
+  padding: 16px 20px;
+  width: 100%;
+  min-height: 60px;
+  text-align: center;
+}
+
+/* Sexo - Grid (mismo formato que comunidades) */
+.sexo-grid {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 10px;
+  padding: 15px;
+  background: linear-gradient(135deg, 
+    rgba(219, 112, 147, 0.05) 0%,
+    rgba(168, 85, 247, 0.05) 50%,
+    rgba(139, 92, 246, 0.05) 100%);
+  justify-content: center;
+  align-items: center;
+}
+
+.sexo-grid .checkbox-item {
+  gap: 0;
+  padding: 14px 24px;
+  width: 150px;
+  min-height: 55px;
+  text-align: center;
+}
+
+.checkbox-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  cursor: pointer;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  background: white;
+  text-align: center;
+  min-height: 50px;
+}
+
+.checkbox-item:hover {
+  border-color: rgba(168, 85, 247, 0.5);
+  background-color: rgba(168, 85, 247, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.15);
+}
+
+.checkbox-item input[type="checkbox"] {
+  display: none;
+}
+
+.checkbox-item:has(input:checked) {
+  border-color: #a855f7;
+  background: linear-gradient(135deg, 
+    rgba(219, 112, 147, 0.1) 0%,
+    rgba(168, 85, 247, 0.1) 50%,
+    rgba(139, 92, 246, 0.1) 100%);
+  color: #64748b;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.2);
+  transform: scale(0.98);
+}
+
+.checkbox-item:has(input:checked)::after {
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: #a855f7;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.checkbox-item span {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* Rango de años */
+.range-slider {
+  position: relative;
+  padding: 20px 0;
+}
+
+.range-values {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #a855f7;
+}
+
+.range-slider input[type="range"] {
+  position: absolute;
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  pointer-events: none;
+}
+
+.range-slider input[type="range"]::-webkit-slider-track {
+  background: linear-gradient(135deg, 
+    rgba(219, 112, 147, 0.3) 0%,
+    rgba(168, 85, 247, 0.3) 50%,
+    rgba(139, 92, 246, 0.3) 100%);
+  height: 6px;
+  border-radius: 3px;
+}
+
+.range-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, 
+    rgba(219, 112, 147, 1) 0%,
+    rgba(168, 85, 247, 1) 100%);
+  cursor: pointer;
+  pointer-events: all;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Selección de sexo */
+.radio-group {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.radio-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 12px 20px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.radio-item:hover,
+.radio-item:has(input:checked) {
+  border-color: #a855f7;
+  background-color: rgba(168, 85, 247, 0.1);
+}
+
+.radio-item input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #a855f7;
+}
+
+.radio-item span {
+  font-weight: 500;
+  color: #64748b;
+}
+
+/* Tabla de resultados */
+.table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 20px;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.results-table th {
+  background: linear-gradient(135deg, 
+    rgba(219, 112, 147, 0.1) 0%,
+    rgba(168, 85, 247, 0.1) 50%,
+    rgba(139, 92, 246, 0.1) 100%);
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 2px solid #a855f7;
+}
+
+.results-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #64748b;
+}
+
+.results-table tr:hover {
+  background-color: rgba(168, 85, 247, 0.05);
+}
+
+/* Paginación */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.pagination-btn {
+  background: linear-gradient(135deg, 
+    rgba(219, 112, 147, 1) 0%,
+    rgba(168, 85, 247, 1) 50%,
+    rgba(139, 92, 246, 1) 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(168, 85, 247, 0.3);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pagination-info {
+  font-weight: 500;
+  color: #64748b;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .filter-section,
+  .results-section {
+    margin: 20px 15px;
+    padding: 20px;
+  }
+  
+  .comunidades-grid,
+  .diagnosticos-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .sexo-grid {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .pagination {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .table-container {
+    font-size: 0.9rem;
+  }
+}
