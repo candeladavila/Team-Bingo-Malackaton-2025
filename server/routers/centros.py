@@ -11,10 +11,10 @@ async def get_centros_por_comunidad(comunidad: str):
     try:
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT DISTINCT "Comunidad Autónoma", "CENTRO_RECODIFICADO"
+                SELECT DISTINCT COMUNIDAD_AUTONOMA, CENTRO_RECODIFICADO
                 FROM DATOS_ORIGINALES
-                WHERE UPPER("Comunidad Autónoma") = UPPER(:comunidad)
-                ORDER BY "CENTRO_RECODIFICADO"
+                WHERE UPPER(COMUNIDAD_AUTONOMA) = UPPER(:comunidad)
+                ORDER BY CENTRO_RECODIFICADO
             """, [comunidad])
             cols = [col[0] for col in cursor.description]
             data = [dict(zip(cols, row)) for row in cursor.fetchall()]
