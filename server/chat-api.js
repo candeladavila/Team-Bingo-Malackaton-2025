@@ -1,13 +1,23 @@
 import express from "express";
-import fetch from "node-fetch";
+import cors from "cors";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
-import cors from "cors";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import Database from './database.js';
 
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Configuración multi-proveedor como en el proyecto de referencia
+const AI_PROVIDERS = {
+  gemini: {
+    name: "Google Gemini",
+    enabled: !!process.env.GOOGLE_API_KEY,
+    genAI: process.env.GOOGLE_API_KEY ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY) : null,
+    model: "gemini-2.0-flash"
+  }
+};
 
 // Middleware
 app.use(cors());
@@ -21,8 +31,67 @@ const limiter = rateLimit({
 });
 app.use("/api/chat", limiter);
 
-// Base de conocimiento de salud mental en España
-const MENTAL_HEALTH_KNOWLEDGE = {
+// Esquema de la base de datos para el agente SQL
+const DATABASE_SCHEMA = `
+TABLAS DISPONIBLES EN ORACLE:
+- VISTA_MUY_INTERESANTE (region, enfermedad, num_casos)
+  • region: Comunidad Autónoma (Texto)
+  • enfermedad: Diagnóstico Principal (Texto) 
+  • num_casos: Número de casos (Número)
+
+EJEMPLOS DE CONSULTAS VÁLIDAS:
+- "SELECT region, enfermedad, num_casos FROM VISTA_MUY_INTERESANTE WHERE region LIKE '%Madrid%'"
+- "SELECT enfermedad, SUM(num_casos) as total FROM VISTA_MUY_INTERESANTE GROUP BY enfermedad ORDER BY total DESC"
+- "SELECT region, COUNT(*) as tipos_enfermedad FROM VISTA_MUY_INTERESANTE GROUP BY region"
+
+RESTRICCIONES:
+- Usar sólo la tabla VISTA_MUY_INTERESANTE
+- No usar comillas en nombres de columnas
+- Usar SQL compatible con Oracle
+`;
+
+// Prompt especializado para generación de SQL (como en el proyecto de referencia)
+const SQL_GENERATION_PROMPT = `Eres un experto en SQL para Oracle especializado en salud mental. 
+Genera SOLO la consulta SQL compatible con Oracle.
+
+ESQUEMA DE LA BASE DE DATOS:
+${DATABASE_SCHEMA}
+
+INSTRUCCIONES:
+1. Genera SQL válido para Oracle
+2. Usa sólo columnas existentes en el esquema
+3. No incluyas explicaciones, sólo el SQL
+4. Para búsquedas de texto usa LIKE con %%
+5. Ordena por num_casos DESC cuando sea relevante
+
+PREGUNTA DEL USUARIO: {userQuestion}
+
+SQL:`;
+
+// Prompt para interpretación de resultados
+const INTERPRETATION_PROMPT = `Eres un experto en análisis de datos de salud mental en España. 
+Analiza e interpreta los resultados SQL y proporciona una respuesta útil y empática.
+
+CONTEXTO:
+- Datos reales del sistema de salud mental español
+- Información por comunidades autónomas y diagnósticos
+
+RESULTADOS SQL:
+{queryResults}
+
+PREGUNTA ORIGINAL: {originalQuestion}
+
+DIRECTIVAS DE RESPUESTA:
+1. Sé empático y validante
+2. Proporciona contexto sobre los datos
+3. Ofrece recursos de ayuda cuando sea relevante
+4. Mantén un tono profesional pero accesible
+5. Si hay pocos datos, explícalo amablemente
+
+RESPUESTA:`;
+
+// Base de conocimiento de salud mental
+const MENTAL_HEALTH_RESOURCES = {
   crisis: {
     telefono: '717 003 717',
     emergencias: '112',
@@ -31,57 +100,68 @@ const MENTAL_HEALTH_KNOWLEDGE = {
 • Emergencias: 112
 • Urgencias hospitalarias
 No estás solo/a. Hay ayuda disponible.`
-  },
-  recursos: `💙 **RECURSOS EN ESPAÑA**:
-• Salud Mental España: federacion@consaludmental.org
-• APPF: 915 47 01 11
-• Centros de Salud Mental públicos
-• Psicólogos colegiados`,
-  
-  estadisticas: `📊 **DATOS ESPAÑA**:
-• 1 de cada 4 personas tendrá problemas de salud mental
-• Ansiedad y depresión son los más comunes
-• Solo 30-40% busca ayuda profesional
-• 75% de trastornos comienzan antes de los 25 años`
+  }
 };
 
-// Sistema de prompts especializado
-const SYSTEM_PROMPT = `Eres "Acompaña", asistente virtual especializado en salud mental en España con acceso a datos reales.
+// Función para generar SQL con Gemini (como en el notebook de referencia)
+async function generateSQL(userQuestion) {
+  if (!AI_PROVIDERS.gemini.enabled) {
+    throw new Error("Google Gemini no está configurado");
+  }
 
-DIRECTRICES:
-💚 TONO: Empático, cálido, validante
-💚 SEGURIDAD: No dar diagnósticos médicos
-💚 ORIENTACIÓN: Dirigir a recursos profesionales
-💚 DATOS: Usar información real de España cuando esté disponible
+  const prompt = SQL_GENERATION_PROMPT.replace('{userQuestion}', userQuestion);
+  const model = AI_PROVIDERS.gemini.genAI.getGenerativeModel({ 
+    model: AI_PROVIDERS.gemini.model 
+  });
 
-INFORMACIÓN ESPAÑA:
-${Object.entries(MENTAL_HEALTH_KNOWLEDGE).map(([key, value]) => 
-  `## ${key.toUpperCase()}:\n${typeof value === 'object' ? value.texto : value}`
-).join('\n\n')}
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    let sql = response.text().trim();
+    
+    // Limpiar el SQL (eliminar markdown si existe)
+    sql = sql.replace(/```sql/g, '').replace(/```/g, '').trim();
+    
+    console.log('🤖 SQL Generado:', sql);
+    return sql;
+  } catch (error) {
+    console.error('Error generando SQL:', error);
+    throw new Error("No pude generar la consulta SQL");
+  }
+}
 
-RESPUESTA IDEAL:
-1. Validar emoción: "Entiendo que esto debe ser difícil..."
-2. Ofrecer información relevante (usar datos reales si están disponibles)
-3. Sugerir recursos apropiados en España
-4. Transmitir esperanza: "Con apoyo adecuado, las cosas pueden mejorar"
-5. Preguntar si necesita más ayuda específica
+// Función para interpretar resultados con Gemini
+async function interpretResults(queryResults, originalQuestion) {
+  if (!AI_PROVIDERS.gemini.enabled) {
+    return "💙 Basándome en los datos: " + JSON.stringify(queryResults);
+  }
 
-SI EL USUARIO PREGUNTA SOBRE DATOS ESPECÍFICOS:
-- Comunidades autónomas
-- Diagnósticos principales  
-- Número de casos
-- Estadísticas por región
-Consulta la base de datos y proporciona información precisa.`;
+  const prompt = INTERPRETATION_PROMPT
+    .replace('{queryResults}', JSON.stringify(queryResults, null, 2))
+    .replace('{originalQuestion}', originalQuestion);
 
-// Detección de palabras clave para consultas a BD
-function detectDataKeywords(message) {
+  const model = AI_PROVIDERS.gemini.genAI.getGenerativeModel({ 
+    model: AI_PROVIDERS.gemini.model 
+  });
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error interpretando resultados:', error);
+    return "💙 He consultado los datos pero tengo dificultades para interpretarlos. Contacta con profesionales para más información.";
+  }
+}
+
+// Detección de preguntas sobre datos
+function isDataQuery(message) {
   const dataKeywords = [
     'estadística', 'estadísticas', 'dato', 'datos', 'casos', 'número',
     'cuántos', 'cuántas', 'incidencia', 'prevalencia', 'comunidad autónoma',
-    'región', 'diagnóstico', 'enfermedad mental', 'salud mental españa',
-    'andalucía', 'cataluña', 'madrid', 'valencia', 'galicia', 'castilla',
-    'aragón', 'navarra', 'país vasco', 'cantabria', 'asturias', 'extremadura',
-    'murcia', 'baleares', 'canarias', 'rioja'
+    'región', 'diagnóstico', 'enfermedad mental', 'salud mental',
+    'madrid', 'cataluña', 'andalucía', 'valencia', 'galicia', 'país vasco',
+    'castilla', 'navarra', 'aragón', 'extremadura', 'murcia', 'baleares', 'canarias'
   ];
   return dataKeywords.some(keyword => 
     message.toLowerCase().includes(keyword.toLowerCase())
@@ -89,7 +169,7 @@ function detectDataKeywords(message) {
 }
 
 // Detección de urgencias
-function detectUrgentKeywords(message) {
+function isUrgentQuery(message) {
   const urgentWords = [
     'suicidio', 'matarme', 'acabar con todo', 'no quiero vivir',
     'crisis', 'urgencia', 'emergencia', 'desesperado'
@@ -97,60 +177,7 @@ function detectUrgentKeywords(message) {
   return urgentWords.some(word => message.toLowerCase().includes(word));
 }
 
-// Función para consultar datos de salud mental desde Oracle
-async function queryMentalHealthData(userQuestion) {
-  try {
-    let sqlQuery = `
-      SELECT region, enfermedad, num_casos 
-      FROM VISTA_MUY_INTERESANTE 
-      WHERE 1=1
-    `;
-    
-    const params = {};
-    
-    // Detectar región en la pregunta
-    const regions = [
-      'andalucía', 'cataluña', 'madrid', 'valencia', 'galicia', 'castilla',
-      'aragón', 'navarra', 'país vasco', 'cantabria', 'asturias', 'extremadura',
-      'murcia', 'baleares', 'canarias', 'rioja'
-    ];
-    
-    const foundRegion = regions.find(region => 
-      userQuestion.toLowerCase().includes(region)
-    );
-    
-    if (foundRegion) {
-      sqlQuery += ` AND LOWER(region) LIKE LOWER(:region)`;
-      params.region = `%${foundRegion}%`;
-    }
-    
-    // Detectar enfermedad específica
-    const diseases = [
-      'depresión', 'ansiedad', 'trastorno', 'esquizofrenia', 'bipolar',
-      'estrés', 'pánico', 'fobia', 'obsesivo', 'compulsivo'
-    ];
-    
-    const foundDisease = diseases.find(disease => 
-      userQuestion.toLowerCase().includes(disease)
-    );
-    
-    if (foundDisease) {
-      sqlQuery += ` AND LOWER(enfermedad) LIKE LOWER(:enfermedad)`;
-      params.enfermedad = `%${foundDisease}%`;
-    }
-    
-    sqlQuery += ` ORDER BY num_casos DESC FETCH FIRST 10 ROWS ONLY`;
-    
-    const results = await Database.executeQuery(sqlQuery, params);
-    return results;
-    
-  } catch (error) {
-    console.error('Error consultando datos de salud mental:', error);
-    return null;
-  }
-}
-
-// Endpoint principal de chat
+// Endpoint principal mejorado con enfoque agentic
 app.post("/api/chat", async (req, res) => {
   const { message, history = [] } = req.body;
   
@@ -161,82 +188,67 @@ app.post("/api/chat", async (req, res) => {
     });
   }
 
-  const isUrgent = detectUrgentKeywords(message);
-  const hasDataQuery = detectDataKeywords(message);
+  const isUrgent = isUrgentQuery(message);
+  const isData = isDataQuery(message);
   
   try {
-    let dataContext = '';
-    
-    // Consultar datos reales si es necesario
-    if (hasDataQuery && Database.pool) {
-      const mentalHealthData = await queryMentalHealthData(message);
-      if (mentalHealthData && mentalHealthData.length > 0) {
-        dataContext = `\n\n📊 **DATOS REALES DE SALUD MENTAL EN ESPAÑA**:\n`;
-        mentalHealthData.forEach(row => {
-          dataContext += `• ${row.REGION}: ${row.ENFERMEDAD} - ${row.NUM_CASOS} casos\n`;
-        });
-        dataContext += `\nEstos son datos reales del sistema de salud español.`;
-      } else {
-        dataContext = `\n\nℹ️ No encontré datos específicos para tu consulta, pero puedo ofrecerte información general sobre salud mental en España.`;
+    let reply;
+    let usedData = false;
+
+    // Flujo agentic: Si es pregunta de datos → Generar SQL → Ejecutar → Interpretar
+    if (isData && Database.pool && AI_PROVIDERS.gemini.enabled) {
+      try {
+        console.log('🔍 Detectada pregunta de datos, generando SQL...');
+        
+        // 1. Generar SQL con IA
+        const generatedSQL = await generateSQL(message);
+        
+        // 2. Ejecutar en Oracle
+        const queryResults = await Database.executeQuery(generatedSQL);
+        usedData = queryResults && queryResults.length > 0;
+        
+        if (usedData) {
+          console.log(`📊 Obtenidos ${queryResults.length} registros de Oracle`);
+          
+          // 3. Interpretar resultados con IA
+          reply = await interpretResults(queryResults, message);
+        } else {
+          reply = "💙 No encontré datos específicos para tu consulta. ¿Podrías reformularla o preguntar sobre otra comunidad o diagnóstico?";
+        }
+        
+      } catch (sqlError) {
+        console.error('Error en flujo agentic:', sqlError);
+        reply = "💙 Tuve problemas para consultar los datos. Por favor, intenta con una pregunta más específica sobre comunidades autónomas o diagnósticos.";
       }
-    }
-
-    const messages = [
-      { 
-        role: "system", 
-        content: SYSTEM_PROMPT + (dataContext ? `\n\nINFORMACIÓN ACTUAL DE LA BASE DE DATOS:${dataContext}` : '') 
-      },
-      ...history.slice(-6),
-      { role: "user", content: message }
-    ];
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: messages,
-        max_tokens: 800,
-        temperature: 0.7
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    let reply = data.choices?.[0]?.message?.content?.trim() 
-      || "💙 Lo siento, no puedo generar una respuesta en este momento. ¿Podrías intentarlo de nuevo?";
-
-    // Añadir recursos de crisis si es urgente
-    if (isUrgent) {
-      reply += `\n\n${MENTAL_HEALTH_KNOWLEDGE.crisis.texto}`;
+    } else if (isUrgent) {
+      // Respuesta directa para crisis
+      reply = `💙 Veo que estás pasando por un momento difícil. ${MENTAL_HEALTH_RESOURCES.crisis.texto}`;
+    } else {
+      // Respuesta general con IA
+      reply = await generateGeneralResponse(message);
     }
 
     // Guardar en base de datos
     try {
       await Database.executeQuery(
-        `INSERT INTO chat_conversations (user_message, assistant_response, is_urgent, has_data_query, created_at) 
-         VALUES (:userMessage, :assistantResponse, :isUrgent, :hasDataQuery, SYSDATE)`,
+        `INSERT INTO chat_conversations (user_message, assistant_response, is_urgent, used_data, created_at) 
+         VALUES (:userMessage, :assistantResponse, :isUrgent, :usedData, SYSDATE)`,
         {
           userMessage: message.substring(0, 4000),
           assistantResponse: reply.substring(0, 4000),
           isUrgent: isUrgent ? 1 : 0,
-          hasDataQuery: hasDataQuery ? 1 : 0
+          usedData: usedData ? 1 : 0
         }
       );
     } catch (dbError) {
-      console.log('Chat guardado localmente (sin BD)');
+      console.log('Conversación guardada localmente');
     }
 
     res.json({ 
       reply,
       isUrgent,
-      hasData: hasDataQuery && dataContext !== '',
+      usedData,
+      provider: AI_PROVIDERS.gemini.enabled ? "Google Gemini" : "Sistema Básico",
       timestamp: new Date().toISOString()
     });
 
@@ -244,8 +256,8 @@ app.post("/api/chat", async (req, res) => {
     console.error("Error en /api/chat:", error);
     
     const fallbackReply = isUrgent 
-      ? `💙 Veo que estás pasando por un momento difícil. Contacta inmediatamente: ${MENTAL_HEALTH_KNOWLEDGE.crisis.telefono} o emergencias: 112`
-      : "💙 Lo siento, hay problemas técnicos. Por favor, intenta de nuevo o contacta directamente con los recursos de ayuda.";
+      ? `💙 Veo que estás pasando por un momento difícil. Contacta inmediatamente: ${MENTAL_HEALTH_RESOURCES.crisis.telefono}`
+      : "💙 Lo siento, hay problemas técnicos. Por favor, intenta de nuevo.";
 
     res.status(500).json({ 
       reply: fallbackReply,
@@ -255,95 +267,80 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-// Endpoint para consultas directas a la base de datos
-app.get("/api/mental-health-data", async (req, res) => {
+// Función para respuestas generales
+async function generateGeneralResponse(message) {
+  if (!AI_PROVIDERS.gemini.enabled) {
+    return "💙 Soy Acompaña, tu asistente de salud mental. Puedo ayudarte con información sobre recursos en España y datos de salud mental. ¿En qué puedo ayudarte?";
+  }
+
+  const generalPrompt = `Eres "Acompaña", un asistente virtual especializado en salud mental en España.
+
+Responde de manera empática y útil a la siguiente pregunta. Si es sobre datos específicos, indica que puedes consultar información por comunidades autónomas.
+
+Pregunta: ${message}
+
+Respuesta:`;
+
+  const model = AI_PROVIDERS.gemini.genAI.getGenerativeModel({ 
+    model: AI_PROVIDERS.gemini.model 
+  });
+
   try {
-    const { region, enfermedad, limit = 20 } = req.query;
-    
-    let sqlQuery = `
-      SELECT region, enfermedad, num_casos 
-      FROM VISTA_MUY_INTERESANTE 
-      WHERE 1=1
-    `;
-    
-    const params = {};
-    
-    if (region) {
-      sqlQuery += ` AND LOWER(region) LIKE LOWER(:region)`;
-      params.region = `%${region}%`;
-    }
-    
-    if (enfermedad) {
-      sqlQuery += ` AND LOWER(enfermedad) LIKE LOWER(:enfermedad)`;
-      params.enfermedad = `%${enfermedad}%`;
-    }
-    
-    sqlQuery += ` ORDER BY num_casos DESC FETCH FIRST :limit ROWS ONLY`;
-    params.limit = parseInt(limit);
-    
-    const results = await Database.executeQuery(sqlQuery, params);
-    
-    res.json({
-      success: true,
-      data: results,
-      count: results.length,
-      timestamp: new Date().toISOString()
-    });
-    
+    const result = await model.generateContent(generalPrompt);
+    const response = await result.response;
+    return response.text();
   } catch (error) {
-    console.error('Error en /api/mental-health-data:', error);
-    res.status(500).json({
-      success: false,
-      error: "Error consultando la base de datos",
-      data: []
-    });
+    return "💙 Hola, soy Acompaña. Puedo ayudarte con información sobre salud mental en España. ¿En qué puedo ayudarte?";
+  }
+}
+
+// Endpoint para probar generación de SQL directamente
+app.post("/api/generate-sql", async (req, res) => {
+  const { question } = req.body;
+  
+  if (!question?.trim()) {
+    return res.status(400).json({ error: "Pregunta vacía" });
+  }
+
+  try {
+    const sql = await generateSQL(question);
+    res.json({ sql, question });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Endpoints de información
+// Endpoints existentes
 app.get("/api/health", (req, res) => {
   res.json({ 
     status: "healthy",
-    service: "Team Bingo - Mental Health Chat con Oracle",
+    service: "Team Bingo - Agentic Mental Health Chat",
     database: Database.pool ? "connected" : "not_configured",
+    ai_provider: AI_PROVIDERS.gemini.enabled ? "Google Gemini" : "none",
     timestamp: new Date().toISOString()
   });
 });
 
-app.get("/api/resources", (req, res) => {
-  res.json(MENTAL_HEALTH_KNOWLEDGE);
+app.get("/api/schema", (req, res) => {
+  res.json({ schema: DATABASE_SCHEMA });
 });
 
-// Manejo de errores global
-app.use((error, req, res, next) => {
-  console.error('Error global:', error);
-  res.status(500).json({
-    error: "Error interno del servidor",
-    message: "Por favor, intenta más tarde."
-  });
-});
-
-// Ruta no encontrada
-app.use("*", (req, res) => {
-  res.status(404).json({ error: "Ruta no encontrada" });
-});
-
-// Inicializar y arrancar servidor
+// Inicializar servidor
 const startServer = async () => {
   try {
     await Database.initialize();
     
     app.listen(PORT, () => {
-      console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`);
-      console.log(`💚 Chatbot de salud mental con Oracle Database`);
-      console.log(`📊 Vista de datos: VISTA_MUY_INTERESANTE`);
+      console.log(`🚀 Servidor Agentic ejecutándose en puerto ${PORT}`);
+      console.log(`💚 Chatbot de salud mental con IA Generativa`);
+      console.log(`🤖 Proveedor IA: ${AI_PROVIDERS.gemini.enabled ? 'Google Gemini' : 'Ninguno'}`);
+      console.log(`🗄️  Base de datos: ${Database.pool ? 'CONECTADA' : 'NO CONECTADA'}`);
     });
     
   } catch (error) {
     console.log('⚠️  Iniciando servidor sin base de datos...');
     app.listen(PORT, () => {
       console.log(`🚀 Servidor ejecutándose en puerto ${PORT} (sin BD)`);
-      console.log(`💚 Chatbot de salud mental (modo básico)`);
     });
   }
 };
