@@ -6,7 +6,7 @@ export default function Chat() {
     return saved ? JSON.parse(saved) : [
       { 
         role: "assistant", 
-        content: "Hola, soy Acompaña 💚. Estoy aquí para escucharte y orientarte sobre salud mental en España. ¿En qué puedo ayudarte hoy?",
+        content: "Hola, soy Acompaña 💚. Estoy aquí para escucharte y orientarte sobre salud mental en España. Tengo acceso a datos reales del sistema de salud. ¿En qué puedo ayudarte hoy?",
         timestamp: new Date().toISOString()
       }
     ];
@@ -15,23 +15,18 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
+  const [showDataInfo, setShowDataInfo] = useState(false);
   const endRef = useRef();
 
-  // Guardar historial en sessionStorage
+  // Efectos para persistencia y scroll
   useEffect(() => {
     sessionStorage.setItem("mental-health-chat-history", JSON.stringify(messages));
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Efecto para scroll automático
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
-
   async function sendMessage(e) {
     e?.preventDefault();
     const trimmedInput = input.trim();
-    
     if (!trimmedInput || loading) return;
 
     const userMsg = { 
@@ -44,6 +39,7 @@ export default function Chat() {
     setInput("");
     setLoading(true);
     setConnectionError(false);
+    setShowDataInfo(false);
 
     try {
       const res = await fetch("/api/chat", {
@@ -51,22 +47,27 @@ export default function Chat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           message: trimmedInput, 
-          history: messages.slice(-8) 
+          history: messages.slice(-6)
         })
       });
 
       if (!res.ok) throw new Error("Error del servidor");
 
       const data = await res.json();
-      
       const assistantMsg = { 
         role: "assistant", 
         content: data.reply,
         timestamp: new Date().toISOString(),
-        isUrgent: data.isUrgent
+        isUrgent: data.isUrgent,
+        hasData: data.hasData
       };
       
       setMessages(prev => [...prev, assistantMsg]);
+      
+      // Mostrar info sobre datos si la respuesta incluye datos reales
+      if (data.hasData) {
+        setShowDataInfo(true);
+      }
 
     } catch (err) {
       console.error("Error:", err);
@@ -74,7 +75,7 @@ export default function Chat() {
       
       const errorMsg = { 
         role: "assistant", 
-        content: "💙 Lo siento, hay un problema de conexión. Por favor, intenta de nuevo. Si es urgente, contacta con el Teléfono de la Esperanza: 717 003 717",
+        content: "💙 Lo siento, hay un problema de conexión. Si es urgente, contacta con el Teléfono de la Esperanza: 717 003 717",
         timestamp: new Date().toISOString(),
         isError: true
       };
@@ -94,10 +95,10 @@ export default function Chat() {
 
   function quickSuggestions() {
     const suggestions = [
-      "¿Dónde buscar ayuda en España?",
-      "Estadísticas de salud mental",
-      "Recursos para crisis",
-      "Cómo apoyar a un familiar"
+      "Estadísticas de depresión por comunidad autónoma",
+      "Datos de ansiedad en España",
+      "Casos de salud mental en Madrid",
+      "Recursos para crisis inmediata"
     ];
 
     return (
@@ -115,6 +116,9 @@ export default function Chat() {
             </button>
           ))}
         </div>
+        <div className="data-info">
+          <small>📊 Respuestas con datos reales del sistema de salud español</small>
+        </div>
       </div>
     );
   }
@@ -127,12 +131,12 @@ export default function Chat() {
           <div className="avatar">💚</div>
           <div>
             <h2>Acompaña</h2>
-            <p className="subtitle">Asistente de salud mental España</p>
+            <p className="subtitle">Asistente con datos reales de salud mental</p>
           </div>
         </div>
         <div className="connection-status">
-          {connectionError && <span className="status-error">Sin conexión</span>}
-          {!connectionError && <span className="status-ok">Conectado</span>}
+          {connectionError && <span className="status-error">⚠️ Sin conexión</span>}
+          {!connectionError && <span className="status-ok">✅ Conectado</span>}
         </div>
       </div>
 
@@ -145,10 +149,15 @@ export default function Chat() {
                 <div className="message-avatar">💚</div>
               )}
               <div className="message-bubble-container">
-                <div className={`message-bubble ${msg.isUrgent ? 'urgent' : ''} ${msg.isError ? 'error' : ''}`}>
+                <div className={`message-bubble ${msg.isUrgent ? 'urgent' : ''} ${msg.isError ? 'error' : ''} ${msg.hasData ? 'has-data' : ''}`}>
                   {msg.content.split('\n').map((line, i) => (
                     <p key={i} className="message-text">{line}</p>
                   ))}
+                  {msg.hasData && (
+                    <div className="data-badge">
+                      📊 Datos reales del sistema de salud
+                    </div>
+                  )}
                 </div>
                 <div className="message-timestamp">
                   {formatTime(msg.timestamp)}
@@ -176,7 +185,14 @@ export default function Chat() {
         <div ref={endRef} />
       </div>
 
-      {/* Sugerencias rápidas (solo si no hay mensajes del usuario) */}
+      {/* Información sobre datos */}
+      {showDataInfo && (
+        <div className="data-alert">
+          <span>📊 Esta respuesta incluye datos reales del sistema de salud español</span>
+        </div>
+      )}
+
+      {/* Sugerencias rápidas */}
       {messages.length === 1 && quickSuggestions()}
 
       {/* Input */}
@@ -184,7 +200,7 @@ export default function Chat() {
         <div className="input-wrapper">
           <input
             className="message-input"
-            placeholder="Escribe tu mensaje aquí..."
+            placeholder="Pregunta sobre datos de salud mental en España..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={loading}
@@ -201,7 +217,7 @@ export default function Chat() {
         </div>
         <div className="input-footer">
           <span className="char-count">{input.length}/500</span>
-          <span className="security-notice">Conversación segura y privada</span>
+          <span className="security-notice">🔒 Conversación segura con datos reales</span>
         </div>
       </form>
 
