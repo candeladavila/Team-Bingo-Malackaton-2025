@@ -2,11 +2,13 @@
   "name": "mental-health-chat-backend",
   "type": "module",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
     "express": "^4.18.2",
-    "node-fetch": "^3.3.2",
-    "dotenv": "^16.3.1",
     "express-rate-limit": "^6.8.1",
-    "cors": "^2.8.5"
+    "node-fetch": "^3.3.2",
+    "oracledb": "^6.9.0"
   },
   "scripts": {
     "start": "node chat-api.js",
