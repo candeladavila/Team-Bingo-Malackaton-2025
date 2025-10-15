@@ -13,11 +13,12 @@ async def get_pacientes_por_rango_fechas(fecha_inicio: str, fecha_fin: str):
     try:
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT id_paciente, CIP_SNS_Recodificado, Nombre, Fecha_nacimiento, Sexo,
-                       País_nacimiento, País_residencia
-                FROM Paciente
-                WHERE Fecha_nacimiento BETWEEN TO_DATE(:inicio, 'YYYY-MM-DD') AND TO_DATE(:fin, 'YYYY-MM-DD')
-                ORDER BY Fecha_nacimiento
+                SELECT DISTINCT "CIP_SNS_RECODIFICADO", "NOMBRE", "FECHA_DE_NACIMIENTO", "SEXO",
+                       "País Nacimiento", "País Residencia", "Comunidad Autónoma"
+                FROM DATOS_ORIGINALES
+                WHERE TO_DATE("FECHA_DE_NACIMIENTO", 'YYYY-MM-DD')
+                      BETWEEN TO_DATE(:inicio, 'YYYY-MM-DD') AND TO_DATE(:fin, 'YYYY-MM-DD')
+                ORDER BY "FECHA_DE_NACIMIENTO"
             """, [fecha_inicio, fecha_fin])
             cols = [col[0] for col in cursor.description]
             data = [dict(zip(cols, row)) for row in cursor.fetchall()]
@@ -35,11 +36,11 @@ async def get_pacientes_por_sexo(sexo: str):
     try:
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT id_paciente, CIP_SNS_Recodificado, Nombre, Fecha_nacimiento, Sexo,
-                       País_nacimiento, País_residencia
-                FROM Paciente
-                WHERE UPPER(Sexo) = UPPER(:sexo)
-                ORDER BY Nombre
+                SELECT DISTINCT "CIP_SNS_RECODIFICADO", "NOMBRE", "FECHA_DE_NACIMIENTO", "SEXO",
+                       "País Nacimiento", "País Residencia", "Comunidad Autónoma"
+                FROM DATOS_ORIGINALES
+                WHERE UPPER("SEXO") = UPPER(:sexo)
+                ORDER BY "NOMBRE"
             """, [sexo])
             cols = [col[0] for col in cursor.description]
             data = [dict(zip(cols, row)) for row in cursor.fetchall()]
