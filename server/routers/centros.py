@@ -3,19 +3,18 @@ from db.connection import connection
 
 router = APIRouter(prefix="/centros", tags=["centros"])
 
-# Filtrar por comunidad autónoma
 @router.get("/comunidad/{comunidad}")
 async def get_centros_por_comunidad(comunidad: str):
     """
-    Devuelve los centros que pertenecen a una comunidad autónoma dada.
+    Devuelve los centros pertenecientes a una comunidad autónoma dada.
     """
     try:
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT id_centro, Centro_Recodificado, Comunidad_Autónoma
-                FROM Centro
-                WHERE UPPER(Comunidad_Autónoma) = UPPER(:comunidad)
-                ORDER BY Centro_Recodificado
+                SELECT DISTINCT "Comunidad Autónoma", "CENTRO_RECODIFICADO"
+                FROM DATOS_ORIGINALES
+                WHERE UPPER("Comunidad Autónoma") = UPPER(:comunidad)
+                ORDER BY "CENTRO_RECODIFICADO"
             """, [comunidad])
             cols = [col[0] for col in cursor.description]
             data = [dict(zip(cols, row)) for row in cursor.fetchall()]
