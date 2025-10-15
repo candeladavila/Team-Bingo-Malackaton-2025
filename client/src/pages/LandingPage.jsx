@@ -116,13 +116,13 @@ const LandingPage = () => {
           </p>
         </div>
 
-        {/* Espacio entre intro y primer cuadro */}
-        <div className="section-spacer"></div>
+        {/* Separador horizontal */}
+        <div className="horizontal-separator"></div>
 
         {/* Sección "Nuestro objetivo" */}
         <div className="objective-section">
           <div className="content-card">
-            <h2>Nuestro objetivo 🎯</h2>
+            <h2>Nuestro objetivo 🔍</h2>
             <p>
               Nuestro objetivo es acercar la comprensión de los datos de salud mental mediante herramientas de inteligencia artificial y visualización accesibles, intuitivas y seguras.
               Buscamos facilitar el trabajo de profesionales, investigadores y organizaciones, promoviendo un uso ético y responsable de los datos clínicos reales
@@ -169,6 +169,9 @@ Nuestra plataforma combina visualización avanzada, pensamiento analítico y mod
             </p>
           </div>
         </div>
+
+        {/* Espacio inferior */}
+        <div className="bottom-spacer"></div>
       </div>
     </div>
   )
