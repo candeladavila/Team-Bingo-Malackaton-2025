@@ -4,7 +4,7 @@ import './DataFilteringPage.css'
 const DataFilteringPage = () => {
   const [filters, setFilters] = useState({
     comunidades: [],
-    añoNacimiento: [1950, 2000],
+    añoNacimiento: [1926, 2025],
     sexo: [],
     diagnosticos: [],
     centros: []
@@ -24,7 +24,7 @@ const DataFilteringPage = () => {
     sexos: [],
     diagnosticos: [],
     centros: [],
-    añoNacimientoRange: { min: 1950, max: 2005 }
+    añoNacimientoRange: { min: 1926, max: 2025 }
   })
 
   const comunidadesAutonomas = [
@@ -46,6 +46,37 @@ const DataFilteringPage = () => {
   // API Base URL - obtiene de variable de entorno o usa valor por defecto
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
+  // Función para formatear fechas a DD/MM/YYYY
+  const formatDate = (dateString) => {
+    if (!dateString) return ''
+    
+    // Si la fecha ya viene en formato DD/MM/YYYY, la devolvemos tal como está
+    if (dateString.includes('/') && dateString.split('/').length === 3) {
+      const parts = dateString.split('/')
+      // Si tiene formato MM/DD/YY o similar, reformateamos
+      if (parts[2].length === 2) {
+        const year = parts[2].length === 2 ? `20${parts[2]}` : parts[2]
+        return `${parts[1].padStart(2, '0')}/${parts[0].padStart(2, '0')}/${year}`
+      }
+      // Si ya está en formato DD/MM/YYYY, lo devolvemos
+      return dateString
+    }
+    
+    // Si viene en formato ISO (YYYY-MM-DD), lo convertimos
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return dateString
+      
+      const day = date.getDate().toString().padStart(2, '0')
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+      const year = date.getFullYear()
+      
+      return `${day}/${month}/${year}`
+    } catch (error) {
+      return dateString
+    }
+  }
+
   // Cargar opciones de filtro al montar el componente
   useEffect(() => {
     loadFilterOptions()
@@ -63,7 +94,7 @@ const DataFilteringPage = () => {
           sexos: options.sexos || ['Hombre', 'Mujer', 'Otros'],
           diagnosticos: options.diagnosticos || diagnosticos,
           centros: options.centros || [],
-          añoNacimientoRange: options.año_nacimiento_range || { min: 1950, max: 2005 }
+          añoNacimientoRange: options.año_nacimiento_range || { min: 1926, max: 2025 }
         })
       }
     } catch (error) {
@@ -74,7 +105,7 @@ const DataFilteringPage = () => {
         sexos: ['Hombre', 'Mujer', 'Otros'],
         diagnosticos: diagnosticos,
         centros: [],
-        añoNacimientoRange: { min: 1950, max: 2005 }
+        añoNacimientoRange: { min: 1926, max: 2025 }
       })
     }
   }
@@ -282,8 +313,8 @@ const DataFilteringPage = () => {
             </div>
             <input
               type="range"
-              min="1950"
-              max="2005"
+              min="1926"
+              max="2025"
               value={filters.añoNacimiento[0]}
               onChange={(e) => setFilters(prev => ({
                 ...prev,
@@ -293,8 +324,8 @@ const DataFilteringPage = () => {
             />
             <input
               type="range"
-              min="1950"
-              max="2005"
+              min="1926"
+              max="2025"
               value={filters.añoNacimiento[1]}
               onChange={(e) => setFilters(prev => ({
                 ...prev,
@@ -414,30 +445,30 @@ const DataFilteringPage = () => {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Nombre</th>
-                <th>Comunidad</th>
-                <th>Año Nacimiento</th>
+                <th>Nombre Completo</th>
+                <th>Comunidad Autónoma</th>
+                <th>Año de Nacimiento</th>
                 <th>Sexo</th>
-                <th>Centro</th>
-                <th>Fecha Ingreso</th>
-                <th>Fecha Fin</th>
+                <th>Centro Médico</th>
+                <th>Fecha de Ingreso</th>
+                <th>Fecha de Fin de Contacto</th>
                 <th>Estancia (días)</th>
-                <th>Diagnóstico</th>
+                <th>Diagnóstico Completo</th>
               </tr>
             </thead>
             <tbody>
               {data.map(row => (
                 <tr key={row.id}>
                   <td>{row.id}</td>
-                  <td>{row.nombre}</td>
-                  <td>{row.comunidad}</td>
+                  <td title={row.nombre}>{row.nombre}</td>
+                  <td title={row.comunidad}>{row.comunidad}</td>
                   <td>{row.año_nacimiento}</td>
                   <td>{row.sexo}</td>
-                  <td title={row.centro}>{row.centro?.length > 15 ? row.centro.substring(0, 15) + '...' : row.centro}</td>
-                  <td>{row.fecha_ingreso}</td>
-                  <td>{row.fecha_fin_contacto}</td>
+                  <td title={row.centro}>{row.centro}</td>
+                  <td>{formatDate(row.fecha_ingreso)}</td>
+                  <td>{formatDate(row.fecha_fin_contacto)}</td>
                   <td>{row.estancia_dias}</td>
-                  <td title={row.diagnostico}>{row.diagnostico?.length > 30 ? row.diagnostico.substring(0, 30) + '...' : row.diagnostico}</td>
+                  <td title={row.diagnostico}>{row.diagnostico}</td>
                 </tr>
               ))}
             </tbody>
