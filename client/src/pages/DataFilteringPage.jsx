@@ -485,10 +485,6 @@ const DataFilteringPage = () => {
             Anterior
           </button>
           
-          <span className="pagination-info">
-            Página {currentPage} de {totalPages} ({totalRecords} registros total.)
-          </span>
-          
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages || loading}
