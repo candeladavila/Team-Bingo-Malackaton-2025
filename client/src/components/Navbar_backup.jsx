@@ -1,18 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import './Navbar.css'
 
 const Navbar = () => {
   const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false)
+  const navigate = useNavigate()
   const location = useLocation()
   const dropdownRef = useRef(null)
 
-  const toggleToolsDropdown = () => {
+  const toggleToolsDropdown = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    console.log('Dropdown toggled:', !isToolsDropdownOpen) // Debug
     setIsToolsDropdownOpen(!isToolsDropdownOpen)
   }
 
   const closeDropdown = () => {
+    console.log('Dropdown closed') // Debug
     setIsToolsDropdownOpen(false)
+  }
+
+  const handleNavigation = (path) => {
+    navigate(path)
+    closeDropdown()
   }
 
   const isActive = (path) => {
