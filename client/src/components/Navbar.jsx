@@ -1,10 +1,16 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import './Navbar.css'
 
 const Navbar = () => {
   const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const dropdownRef = useRef(null)
 
-  const toggleToolsDropdown = () => {
+  const toggleToolsDropdown = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
     setIsToolsDropdownOpen(!isToolsDropdownOpen)
   }
 
@@ -13,33 +19,55 @@ const Navbar = () => {
   }
 
   const handleNavigation = (path) => {
-    // Aquí implementarás la navegación cuando integres React Router
-    console.log(`Navegando a: ${path}`)
+    navigate(path)
     closeDropdown()
   }
+
+  const isActive = (path) => {
+    return location.pathname === path
+  }
+
+  // Cerrar dropdown al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        closeDropdown()
+      }
+    }
+
+    if (isToolsDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isToolsDropdownOpen])
 
   return (
     <nav className="navbar">
       <div className="navbar-container">
         {/* Logo/Nombre de la web */}
         <div className="navbar-brand">
-          <button 
-            className="brand-button"
-            onClick={() => handleNavigation('/')}
-          >
+          <Link to="/" className="brand-button">
             <span className="brand-icon">💡</span>
             <span className="brand-text">Insight</span>
-          </button>
+          </Link>
         </div>
 
         {/* Menú de navegación */}
         <div className="navbar-menu">
           {/* Dropdown de Herramientas */}
-          <div className="navbar-item dropdown">
+          <div className="navbar-item dropdown" ref={dropdownRef}>
             <button 
-              className="dropdown-toggle"
+              className={`dropdown-toggle ${
+                ['/tools', '/data-filtering', '/data-visualization', '/chatbot'].some(path => 
+                  isActive(path)
+                ) ? 'active' : ''
+              }`}
               onClick={toggleToolsDropdown}
               aria-expanded={isToolsDropdownOpen}
+              type="button"
             >
               Herramientas
               <span className={`dropdown-arrow ${isToolsDropdownOpen ? 'open' : ''}`}>
@@ -49,65 +77,64 @@ const Navbar = () => {
             
             {isToolsDropdownOpen && (
               <div className="dropdown-menu">
-                <button 
-                  className="dropdown-item"
-                  onClick={() => handleNavigation('/tools')}
+                <Link 
+                  to="/tools"
+                  className={`dropdown-item ${isActive('/tools') ? 'active' : ''}`}
+                  onClick={closeDropdown}
                 >
                   <span className="item-icon">🛠️</span>
                   Todas las Herramientas
-                </button>
-                <button 
-                  className="dropdown-item"
-                  onClick={() => handleNavigation('/data-filtering')}
+                </Link>
+                <Link 
+                  to="/data-filtering"
+                  className={`dropdown-item ${isActive('/data-filtering') ? 'active' : ''}`}
+                  onClick={closeDropdown}
                 >
                   <span className="item-icon">🔍</span>
                   Filtrado de Datos
-                </button>
-                <button 
-                  className="dropdown-item"
-                  onClick={() => handleNavigation('/data-visualization')}
+                </Link>
+                <Link 
+                  to="/data-visualization"
+                  className={`dropdown-item ${isActive('/data-visualization') ? 'active' : ''}`}
+                  onClick={closeDropdown}
                 >
                   <span className="item-icon">📊</span>
                   Representación Gráfica
-                </button>
-                <button 
-                  className="dropdown-item"
-                  onClick={() => handleNavigation('/chatbot')}
+                </Link>
+                <Link 
+                  to="/chatbot"
+                  className={`dropdown-item ${isActive('/chatbot') ? 'active' : ''}`}
+                  onClick={closeDropdown}
                 >
                   <span className="item-icon">🤖</span>
                   Chatbot
-                </button>
+                </Link>
               </div>
             )}
           </div>
 
           {/* Sobre Nosotros */}
           <div className="navbar-item">
-            <button 
-              className="navbar-link"
-              onClick={() => handleNavigation('/about')}
+            <Link 
+              to="/about"
+              className={`navbar-link ${isActive('/about') ? 'active' : ''}`}
             >
               Sobre Nosotros
-            </button>
+            </Link>
           </div>
 
           {/* Accesibilidad */}
           <div className="navbar-item">
-            <button 
-              className="navbar-link accessibility-link"
-              onClick={() => handleNavigation('/accessibility')}
+            <Link 
+              to="/accessibility"
+              className={`navbar-link accessibility-link ${isActive('/accessibility') ? 'active' : ''}`}
             >
               <span className="item-icon">♿</span>
               Accesibilidad
-            </button>
+            </Link>
           </div>
         </div>
       </div>
-
-      {/* Overlay para cerrar dropdown al hacer clic fuera */}
-      {isToolsDropdownOpen && (
-        <div className="dropdown-overlay" onClick={closeDropdown}></div>
-      )}
     </nav>
   )
 }

@@ -1,28 +1,36 @@
-import React, { useState } from 'react'
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Navbar } from './components'
-import { LandingPage } from './pages'
+import { 
+  LandingPage, 
+  ToolsPage, 
+  DataFilteringPage, 
+  DataVisualizationPage, 
+  ChatbotPage, 
+  AboutPage, 
+  AccessibilityConfigPage 
+} from './pages'
 import './App.css'
 import './styles/pages.css'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('landing')
-
-  const renderPage = () => {
-    switch(currentPage) {
-      case 'landing':
-        return <LandingPage />
-      default:
-        return <LandingPage />
-    }
-  }
-
   return (
-    <div className="App">
-      <Navbar />
-      <main className="main-content">
-        {renderPage()}
-      </main>
-    </div>
+    <Router>
+      <div className="App">
+        <Navbar />
+        <main className="main-content">
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/tools" element={<ToolsPage />} />
+            <Route path="/data-filtering" element={<DataFilteringPage />} />
+            <Route path="/data-visualization" element={<DataVisualizationPage />} />
+            <Route path="/chatbot" element={<ChatbotPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/accessibility" element={<AccessibilityConfigPage />} />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   )
 }
 
