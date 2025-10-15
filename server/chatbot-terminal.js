@@ -1,22 +1,22 @@
-// chatbot-fixed.js
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// chatbot-terminal.js - VERSIÓN CON OPENAI (FUNCIONA)
+import OpenAI from "openai";
 import Database from './database.js';
 import dotenv from 'dotenv';
 import readline from 'readline';
 
 dotenv.config();
 
-// Configuración mejorada
+// Configuración con OpenAI (MÁS CONFIABLE)
 const AI_PROVIDERS = {
-  gemini: {
-    name: "Google Gemini",
-    enabled: !!process.env.GOOGLE_API_KEY,
-    genAI: process.env.GOOGLE_API_KEY ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY) : null,
-    model: "gemini-pro"  // Modelo ligero y rápido
+  openai: {
+    name: "OpenAI GPT",
+    enabled: !!process.env.OPENAI_API_KEY,
+    client: process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null,
+    model: "gpt-4o-mini"  // Rápido y económico
   }
 };
 
-// Esquema corregido
+// Esquema de base de datos
 const DATABASE_SCHEMA = `
 TABLAS DISPONIBLES EN ORACLE:
 - VISTA_MUY_INTERESANTE (region, enfermedad, num_casos)
@@ -36,7 +36,7 @@ RESTRICCIONES:
 - Usar LIKE para búsquedas de texto
 `;
 
-// Prompts mejorados
+// Prompt para generar SQL
 const SQL_GENERATION_PROMPT = `Eres un experto en SQL para Oracle especializado en salud mental. 
 Genera SOLO la consulta SQL compatible con Oracle.
 
@@ -53,31 +53,23 @@ INSTRUCCIONES CRÍTICAS:
 
 PREGUNTA DEL USUARIO: {userQuestion}
 
-SQL:`;
+Responde ÚNICAMENTE con el SQL, sin explicaciones ni formato markdown.`;
 
-// Función de detección MEJORADA
+// Funciones de detección
 function isDataQuery(message) {
   const lowerMsg = message.toLowerCase();
   
   const dataKeywords = [
-    // Palabras de cantidad
     'cuántos', 'cuántas', 'cuantos', 'cuantas', 'número', 'numero', 'cantidad',
     'estadística', 'estadísticas', 'estadistica', 'estadisticas', 'dato', 'datos',
     'casos', 'incidencia', 'prevalencia', 'total',
-    
-    // Regiones - MÁS COMPLETO
     'andalucía', 'andalucia', 'madrid', 'cataluña', 'cataluna', 'valencia', 
     'galicia', 'país vasco', 'pais vasco', 'castilla', 'navarra', 'aragón', 'aragon',
     'extremadura', 'murcia', 'baleares', 'canarias', 'rioja', 'asturias', 'cantabria',
-    
-    // Enfermedades - MÁS COMPLETO
     'esquizofrenia', 'depresión', 'depresion', 'ansiedad', 'trastorno bipolar',
     'trastorno obsesivo', 'tdah', 'psicosis', 'demencia', 'alzheimer',
     'trastorno alimenticio', 'bulimia', 'anorexia', 'autismo', 'asperger',
-    
-    // Términos generales de salud mental
     'enfermedad mental', 'salud mental', 'diagnóstico', 'diagnostico',
-    'tratamiento', 'prevención', 'prevencion'
   ];
 
   return dataKeywords.some(keyword => lowerMsg.includes(keyword));
@@ -85,55 +77,56 @@ function isDataQuery(message) {
 
 function isUrgentQuery(message) {
   const urgentWords = [
-   
+    'suicidio', 'suicidarme', 'matarme', 'acabar con mi vida',
     'crisis', 'urgencia', 'emergencia', 'desesperado', 'ayuda inmediata'
   ];
   return urgentWords.some(word => message.toLowerCase().includes(word));
 }
 
-// Función de IA MEJORADA con manejo de errores
+// Función de generación SQL con OpenAI
 async function generateSQL(userQuestion) {
-  if (!AI_PROVIDERS.gemini.enabled) {
-    throw new Error("Google Gemini no está configurado");
+  if (!AI_PROVIDERS.openai.enabled) {
+    throw new Error("OpenAI no está configurado");
   }
 
   try {
     const prompt = SQL_GENERATION_PROMPT.replace('{userQuestion}', userQuestion);
-    const model = AI_PROVIDERS.gemini.genAI.getGenerativeModel({ 
-      model: AI_PROVIDERS.gemini.model 
+    
+    console.log('   🤖 Solicitando generación de SQL a OpenAI...');
+    
+    const completion = await AI_PROVIDERS.openai.client.chat.completions.create({
+      model: AI_PROVIDERS.openai.model,
+      messages: [
+        { role: "system", content: "Eres un experto en SQL para Oracle. Genera SOLO el SQL sin explicaciones." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 300
     });
 
-    console.log('   🤖 Solicitando generación de SQL a Gemini...');
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let sql = response.text().trim();
+    let sql = completion.choices[0].message.content.trim();
     
-    // Limpiar el SQL más agresivamente
+    // Limpiar el SQL
     sql = sql.replace(/```sql/g, '').replace(/```/g, '').trim();
-    sql = sql.replace(/^SELECT/i, 'SELECT').replace(/;$/, ''); // Eliminar punto y coma final
+    sql = sql.replace(/;$/g, '');
     
     console.log('   ✅ SQL Generado:', sql);
     return sql;
+    
   } catch (error) {
-    // Mostrar el error completo para depuración
-    console.error('   ❌ Error de Gemini:', error);
-    if (error && error.status === 404) {
-      console.error('   ❌ El modelo Gemini especificado no está disponible para tu API Key. Prueba con "gemini-1.0-pro" o revisa tu key en https://aistudio.google.com/app/apikey');
-    }
-    if (error && error.status === 403) {
-      console.error('   ❌ Tu API Key de Gemini no tiene permisos o la API no está habilitada. Actívala en https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview');
-    }
-    // SQL de respaldo para preguntas comunes
+    console.error('   ❌ Error de OpenAI:', error.message);
+    
+    // SQL de respaldo
     const backupSQL = getBackupSQL(userQuestion);
     if (backupSQL) {
       console.log('   🔄 Usando SQL de respaldo:', backupSQL);
       return backupSQL;
     }
-    throw new Error("No pude generar la consulta SQL (verifica tu API Key y modelo)");
+    throw new Error("No pude generar la consulta SQL");
   }
 }
 
-// SQLs de respaldo para preguntas comunes
+// SQLs de respaldo
 function getBackupSQL(question) {
   const lowerQ = question.toLowerCase();
   
@@ -146,11 +139,14 @@ function getBackupSQL(question) {
   if (lowerQ.includes('ansiedad')) {
     return "SELECT region, enfermedad, num_casos FROM VISTA_MUY_INTERESANTE WHERE enfermedad LIKE '%ansiedad%' ORDER BY num_casos DESC";
   }
+  if (lowerQ.includes('esquizofrenia')) {
+    return "SELECT region, enfermedad, num_casos FROM VISTA_MUY_INTERESANTE WHERE enfermedad LIKE '%esquizofrenia%' ORDER BY num_casos DESC";
+  }
   
   return null;
 }
 
-// Función principal CORREGIDA
+// Función principal de procesamiento
 async function processChatMessage(message) {
   const isUrgent = isUrgentQuery(message);
   const isData = isDataQuery(message);
@@ -163,15 +159,13 @@ async function processChatMessage(message) {
   console.log(`📊 Detección de datos: ${isData ? '✅ SÍ' : '❌ NO'}`);
   console.log(`🚨 Detección de urgencia: ${isUrgent ? '✅ SÍ' : '❌ NO'}`);
 
-  // FLUJO AGENTIC MEJORADO
-  if (isData && Database.pool && AI_PROVIDERS.gemini.enabled) {
+  // FLUJO AGENTIC
+  if (isData && Database.pool && AI_PROVIDERS.openai.enabled) {
     try {
-      console.log('🔍 Iniciando flujo agentic...');
+      console.log('🔍 Iniciando flujo agentic con OpenAI...');
       
-      // 1. Generar SQL con IA
       const generatedSQL = await generateSQL(message);
       
-      // 2. Ejecutar en Oracle
       console.log('   🗄️ Ejecutando consulta en Oracle...');
       const queryResults = await Database.executeQuery(generatedSQL);
       usedData = queryResults && queryResults.length > 0;
@@ -179,24 +173,15 @@ async function processChatMessage(message) {
       if (usedData) {
         console.log(`   📊 Obtenidos ${queryResults.length} registros`);
         
-        // Mostrar resultados crudos
-        console.log('   📋 Resultados crudos:', queryResults);
+        reply = `💙 Según los datos del sistema de salud mental:\n\n`;
         
-        // 3. Crear respuesta basada en resultados
-        if (queryResults.length > 0) {
-          const firstResult = queryResults[0];
-          reply = `💙 Según los datos del sistema de salud mental:\n\n`;
-          
-          queryResults.forEach((row, index) => {
-            reply += `• **${row.REGION}**: ${row.NUM_CASOS} casos de ${row.ENFERMEDAD}\n`;
-          });
-          
-          reply += `\nEstos datos representan la situación actual en el sistema de salud público.`;
-        } else {
-          reply = "💙 No se encontraron datos específicos para tu consulta en la base de datos.";
-        }
+        queryResults.forEach((row, index) => {
+          reply += `• **${row.REGION}**: ${row.NUM_CASOS} casos de ${row.ENFERMEDAD}\n`;
+        });
+        
+        reply += `\nEstos datos representan la situación actual en el sistema de salud público.`;
       } else {
-        reply = "💙 La consulta no devolvió resultados. La vista podría no tener datos para esa combinación.";
+        reply = "💙 No se encontraron datos específicos para tu consulta en la base de datos.";
       }
       
     } catch (sqlError) {
@@ -205,12 +190,11 @@ async function processChatMessage(message) {
     }
   } 
   else if (isUrgent) {
-    reply = `🚨 **URGENCIA**\n💙 Veo que estás pasando por un momento difícil.\n\n🔴 **AYUDA INMEDIATA**:\n• Teléfono de la Esperanza: 717 003 717 (24/7)\n• Emergencias: 112\n• Urgencias hospitalarias\n\nNo estás solo/a. Hay ayuda disponible.`;
+    reply = `🚨 **URGENCIA**\n💙 Veo que estás pasando por un momento difícil.\n\n🔴 **AYUDA INMEDIATA**:\n• Teléfono 024: Atención Conducta Suicida (24/7)\n• Teléfono de la Esperanza: 717 003 717\n• Emergencias: 112\n\nNo estás solo/a. Hay ayuda disponible.`;
   } 
   else {
-    // Respuesta general mejorada
-    if (isData && !AI_PROVIDERS.gemini.enabled) {
-      reply = "💙 Detecté que quieres datos, pero la IA no está disponible. Para consultas específicas, necesitas configurar GOOGLE_API_KEY.";
+    if (isData && !AI_PROVIDERS.openai.enabled) {
+      reply = "💙 Detecté que quieres datos, pero la IA no está disponible. Configura OPENAI_API_KEY en .env para consultas dinámicas.";
     } else if (isData && !Database.pool) {
       reply = "💙 Detecté que quieres datos, pero la base de datos no está conectada.";
     } else {
@@ -218,10 +202,9 @@ async function processChatMessage(message) {
     }
   }
 
-  // Guardar en base de datos MEJORADO (con creación de tabla si no existe)
+  // Guardar en BD
   if (Database.pool) {
     try {
-      // Verificar si la tabla existe, si no crearla
       await Database.executeQuery(`
         BEGIN
           EXECUTE IMMEDIATE 'CREATE TABLE chat_conversations (
@@ -233,14 +216,13 @@ async function processChatMessage(message) {
             created_at DATE DEFAULT SYSDATE
           )';
         EXCEPTION
-          WHEN OTHERS THEN
-            NULL; -- La tabla ya existe
+          WHEN OTHERS THEN NULL;
         END;
       `);
       
       await Database.executeQuery(
-        `INSERT INTO chat_conversations (user_message, assistant_response, is_urgent, used_data, created_at) 
-         VALUES (:userMessage, :assistantResponse, :isUrgent, :usedData, SYSDATE)`,
+        `INSERT INTO chat_conversations (user_message, assistant_response, is_urgent, used_data) 
+         VALUES (:userMessage, :assistantResponse, :isUrgent, :usedData)`,
         {
           userMessage: message.substring(0, 4000),
           assistantResponse: reply.substring(0, 4000),
@@ -250,7 +232,7 @@ async function processChatMessage(message) {
       );
       console.log('   💾 Conversación guardada en BD');
     } catch (dbError) {
-      console.log('   💾 Conversación guardada localmente (error BD)');
+      console.log('   💾 Error al guardar en BD');
     }
   }
 
@@ -258,11 +240,11 @@ async function processChatMessage(message) {
     reply,
     isUrgent,
     usedData,
-    provider: AI_PROVIDERS.gemini.enabled ? "Google Gemini" : "Sistema Básico"
+    provider: AI_PROVIDERS.openai.enabled ? "OpenAI GPT" : "Sistema Básico"
   };
 }
 
-// Interfaz de terminal MEJORADA
+// Interfaz de terminal
 function createChatInterface() {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -271,25 +253,18 @@ function createChatInterface() {
 
   console.clear();
   console.log('🚀 ' + '═'.repeat(60));
-  console.log('   🤖 ACOMPAÑA - Chatbot Agentic CORREGIDO');
-  console.log('   🐛 Errores solucionados');
+  console.log('   🤖 ACOMPAÑA - Chatbot con OpenAI');
   console.log('═'.repeat(60));
   
-  console.log('\n💚 **MEJORAS IMPLEMENTADAS**:');
-  console.log('   • ✅ Mejor detección de consultas de datos');
+  console.log('\n💚 **CARACTERÍSTICAS**:');
+  console.log('   • ✅ Generación de SQL con OpenAI');
   console.log('   • ✅ SQL de respaldo para preguntas comunes');
-  console.log('   • ✅ Creación automática de tablas');
+  console.log('   • ✅ Conexión a Oracle Database');
   console.log('   • ✅ Manejo robusto de errores');
-  
-  console.log('\n📊 **CONSULTAS QUE AHORA FUNCIONAN**:');
-  console.log('   • "Casos de esquizofrenia en Andalucía"');
-  console.log('   • "Depresión en Madrid"');
-  console.log('   • "Ansiedad en Cataluña"');
-  console.log('   • "Enfermedades más comunes"');
   
   console.log('\n🔧 **ESTADO ACTUAL**:');
   console.log(`   • Base de datos: ${Database.pool ? '✅ CONECTADA' : '❌ NO CONECTADA'}`);
-  console.log(`   • IA Gemini: ${AI_PROVIDERS.gemini.enabled ? '✅ CONFIGURADA' : '❌ NO CONFIGURADA'}`);
+  console.log(`   • IA OpenAI: ${AI_PROVIDERS.openai.enabled ? '✅ CONFIGURADA' : '❌ NO CONFIGURADA'}`);
   
   console.log('\n' + '─'.repeat(70));
   console.log('Escribe tu mensaje (o "salir" para terminar):');
@@ -299,9 +274,7 @@ function createChatInterface() {
       if (input.toLowerCase() === 'salir') {
         console.log('\n💙 Hasta pronto. Recuerda: No estás solo/a.');
         rl.close();
-        if (Database.pool) {
-          await Database.close();
-        }
+        if (Database.pool) await Database.close();
         process.exit(0);
       }
 
@@ -319,14 +292,13 @@ function createChatInterface() {
         console.log('─'.repeat(50));
         console.log(response.reply);
         console.log('─'.repeat(50));
-        console.log(`📊 ${response.usedData ? '✅ CONSULTA AGENTIC' : '💬 RESPUESTA GENERAL'}`);
+        console.log(`📊 ${response.usedData ? '✅ CONSULTA CON DATOS' : '💬 RESPUESTA GENERAL'}`);
         console.log(`🤖 ${response.provider} | ⏱️ ${processingTime}ms`);
-        if (response.isUrgent) console.log('🚨 **URGENCIA - BUSCA AYUDA**');
+        if (response.isUrgent) console.log('🚨 **URGENCIA DETECTADA**');
         console.log('─'.repeat(50));
 
       } catch (error) {
         console.log('\n❌ Error:', error.message);
-        console.log('💙 Error técnico. Por favor, intenta de nuevo.');
       }
 
       askQuestion();
@@ -336,56 +308,23 @@ function createChatInterface() {
   return askQuestion;
 }
 
-// NUEVA FUNCIÓN DE DIAGNÓSTICO
-async function listAvailableModels() {
-  if (!AI_PROVIDERS.gemini.genAI) {
-    return; // No hacer nada si la IA no está configurada
-  }
-  try {
-    console.log('\n🔍 Verificando modelos de IA disponibles para tu API Key...');
-    const genAI = AI_PROVIDERS.gemini.genAI;
-    
-    // Google AI Studio usa listModels(), el SDK más reciente puede tener otra sintaxis
-    // pero esto es lo más compatible.
-    const { models } = await genAI.listModels();
-
-    const supportedModels = models.filter(m => m.supportedGenerationMethods.includes("generateContent"));
-
-    if (supportedModels.length > 0) {
-        console.log('   ✅ Tu API Key tiene acceso a los siguientes modelos:');
-        for (const m of supportedModels) {
-            console.log(`     • ${m.name} (Admite 'generateContent')`);
-        }
-    } else {
-        console.log('   ⚠️ No se encontraron modelos compatibles con "generateContent" para tu API Key.');
-    }
-    
-  } catch (error) {
-    console.error('   ❌ Error crítico al listar modelos de IA. Esto confirma un problema con la API Key o el proyecto.');
-    console.error('   ', error.message);
-  }
-}
-
-// Inicialización MEJORADA
+// Inicialización
 async function startChatbot() {
   try {
-    console.log('🔧 Inicializando sistema corregido...');
+    console.log('🔧 Inicializando sistema con OpenAI...');
     
     const dbInitialized = await Database.initialize();
-
-    // Llamada a la nueva función de diagnóstico
-    await listAvailableModels();
     
     console.log(`\n📊 ESTADO FINAL:`);
     console.log(`   🗄️  Base de datos: ${dbInitialized ? '✅ CONECTADA' : '❌ NO CONECTADA'}`);
-    console.log(`   🤖 IA Gemini: ${AI_PROVIDERS.gemini.enabled ? '✅ CONFIGURADA' : '❌ NO CONFIGURADA'}`);
+    console.log(`   🤖 IA OpenAI: ${AI_PROVIDERS.openai.enabled ? '✅ CONFIGURADA' : '❌ NO CONFIGURADA'}`);
     
-    if (!AI_PROVIDERS.gemini.enabled) {
-      console.log('\n⚠️  Para IA real: Configura GOOGLE_API_KEY válida en .env');
-      console.log('   📧 Obtén una key en: https://aistudio.google.com/');
+    if (!AI_PROVIDERS.openai.enabled) {
+      console.log('\n⚠️  Para IA: Configura OPENAI_API_KEY en .env');
+      console.log('   📧 Obtén una key en: https://platform.openai.com/api-keys');
     }
     
-    console.log('\n🎯 SISTEMA LISTO - DETECCIÓN MEJORADA ACTIVADA');
+    console.log('\n🎯 SISTEMA LISTO');
 
     const startChat = createChatInterface();
     startChat();
@@ -399,9 +338,7 @@ async function startChatbot() {
 // Manejo de cierre
 process.on('SIGINT', async () => {
   console.log('\n💙 Cerrando chatbot...');
-  if (Database.pool) {
-    await Database.close();
-  }
+  if (Database.pool) await Database.close();
   process.exit(0);
 });
 
