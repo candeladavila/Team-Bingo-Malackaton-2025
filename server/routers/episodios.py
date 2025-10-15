@@ -3,7 +3,7 @@ from db.connection import connection
 
 router = APIRouter(prefix="/episodios", tags=["episodios"])
 
-# 4️⃣ Consultar un episodio por su id
+# Consultar un episodio por su id
 @router.get("/{id_episodio}")
 async def get_episodio_por_id(id_episodio: int):
     """
