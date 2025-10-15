@@ -1,0 +1,30 @@
+{
+  "name": "mental-health-chat-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend chatbot salud mental España",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch chatbot-terminal.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.8.1",
+    "node-fetch": "^3.3.2",
+    "openai": "^6.3.0",
+    "oracledb": "^6.9.0"
+  },
+  "keywords": [
+    "chatbot",
+    "salud-mental",
+    "oracle",
+    "openai"
+  ],
+  "author": "Team Bingo",
+  "license": "MIT"
+}
