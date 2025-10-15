@@ -206,6 +206,21 @@ const DataFilteringPage = () => {
               </label>
             ))}
           </div>
+          {/* Botón Filtrar debajo del rectángulo de diagnósticos */}
+          <div className="filter-actions">
+            <button
+              type="button"
+              className="apply-filter-btn"
+              aria-label="Aplicar filtros de búsqueda"
+              onClick={() => {
+                // Punto de enganche para aplicar los filtros en el futuro
+                // Por ahora, simplemente volvemos a la primera página
+                setCurrentPage(1)
+              }}
+            >
+              Filtrar
+            </button>
+          </div>
         </div>
       </section>
 

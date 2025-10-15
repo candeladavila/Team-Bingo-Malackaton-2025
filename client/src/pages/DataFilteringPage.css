@@ -386,6 +386,45 @@
   text-align: center;
 }
 
+/* Acciones del filtrado (contenedor del botón) */
+.filter-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+/* Botón Filtrar con colores lilas/rosáceos */
+.apply-filter-btn {
+  background: linear-gradient(135deg,
+    rgba(219, 112, 147, 1) 0%,
+    rgba(168, 85, 247, 1) 50%,
+    rgba(139, 92, 246, 1) 100%);
+  color: #ffffff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 8px 18px rgba(168, 85, 247, 0.28);
+}
+
+.apply-filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(168, 85, 247, 0.35);
+}
+
+.apply-filter-btn:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+.apply-filter-btn:focus-visible {
+  outline: 3px solid rgba(168, 85, 247, 0.45);
+  outline-offset: 3px;
+}
+
 /* Sexo - Grid (mismo formato que comunidades) */
 .sexo-grid {
   display: flex;
