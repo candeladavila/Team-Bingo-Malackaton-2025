@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import './DataFilteringPage.css'
 
 const DataFilteringPage = () => {
@@ -6,11 +6,26 @@ const DataFilteringPage = () => {
     comunidades: [],
     añoNacimiento: [1950, 2000],
     sexo: [],
-    diagnosticos: []
+    diagnosticos: [],
+    centros: []
   })
 
   const [currentPage, setCurrentPage] = useState(1)
   const rowsPerPage = 20
+  const [data, setData] = useState([])
+  const [totalRecords, setTotalRecords] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  // Opciones dinámicas obtenidas del backend
+  const [filterOptions, setFilterOptions] = useState({
+    comunidades: [],
+    sexos: [],
+    diagnosticos: [],
+    centros: [],
+    añoNacimientoRange: { min: 1950, max: 2005 }
+  })
 
   const comunidadesAutonomas = [
     'Andalucía', 'Aragón', 'Asturias', 'Baleares', 'Canarias', 'Cantabria',
@@ -28,18 +43,114 @@ const DataFilteringPage = () => {
     'Trastornos neuróticos, trastornos relacionados con el estrés y trastornos somatomorfos'
   ]
 
-  // Datos simulados de la tabla
-  const mockData = Array.from({ length: 156 }, (_, i) => ({
-    id: i + 1,
-    nombre: `Paciente ${i + 1}`,
-    comunidad: comunidadesAutonomas[Math.floor(Math.random() * comunidadesAutonomas.length)],
-    añoNacimiento: 1950 + Math.floor(Math.random() * 50),
-    sexo: ['Hombre', 'Mujer', 'Otros'][Math.floor(Math.random() * 3)],
-    diagnostico: diagnosticos[Math.floor(Math.random() * diagnosticos.length)]
-  }))
+  // API Base URL - obtiene de variable de entorno o usa valor por defecto
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
-  const totalPages = Math.ceil(mockData.length / rowsPerPage)
-  const currentData = mockData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
+  // Cargar opciones de filtro al montar el componente
+  useEffect(() => {
+    loadFilterOptions()
+    loadPatients() // Cargar datos iniciales
+  }, [])
+
+  // Cargar opciones de filtro desde el backend
+  const loadFilterOptions = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/filter-options`)
+      if (response.ok) {
+        const options = await response.json()
+        setFilterOptions({
+          comunidades: options.comunidades || comunidadesAutonomas,
+          sexos: options.sexos || ['Hombre', 'Mujer', 'Otros'],
+          diagnosticos: options.diagnosticos || diagnosticos,
+          centros: options.centros || [],
+          añoNacimientoRange: options.año_nacimiento_range || { min: 1950, max: 2005 }
+        })
+      }
+    } catch (error) {
+      console.warn('No se pudieron cargar las opciones de filtro del servidor, usando valores por defecto:', error)
+      // Usar valores por defecto si falla la carga
+      setFilterOptions({
+        comunidades: comunidadesAutonomas,
+        sexos: ['Hombre', 'Mujer', 'Otros'],
+        diagnosticos: diagnosticos,
+        centros: [],
+        añoNacimientoRange: { min: 1950, max: 2005 }
+      })
+    }
+  }
+
+  // Cargar pacientes con filtros aplicados
+  const loadPatients = async (appliedFilters = null, page = 1) => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const filtersToUse = appliedFilters || filters
+      
+      const requestBody = {
+        comunidades: filtersToUse.comunidades,
+        año_nacimiento_min: filtersToUse.añoNacimiento[0],
+        año_nacimiento_max: filtersToUse.añoNacimiento[1],
+        sexo: filtersToUse.sexo,
+        diagnosticos: filtersToUse.diagnosticos,
+        centros: filtersToUse.centros,
+        page: page,
+        rows_per_page: rowsPerPage
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/filter-patients`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      })
+
+      if (!response.ok) {
+        throw new Error(`Error del servidor: ${response.status}`)
+      }
+
+      const result = await response.json()
+      
+      setData(result.data)
+      setTotalRecords(result.total_records)
+      setTotalPages(result.total_pages)
+      setCurrentPage(result.current_page)
+      
+    } catch (error) {
+      setError(`Error al cargar datos: ${error.message}`)
+      console.error('Error al cargar pacientes:', error)
+      
+      // Generar datos mock en caso de error de conexión
+      generateMockData()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Generar datos mock como respaldo
+  const generateMockData = () => {
+    const mockData = Array.from({ length: 156 }, (_, i) => ({
+      id: i + 1,
+      nombre: `Paciente ${i + 1}`,
+      comunidad: comunidadesAutonomas[Math.floor(Math.random() * comunidadesAutonomas.length)],
+      año_nacimiento: 1950 + Math.floor(Math.random() * 50),
+      sexo: ['Hombre', 'Mujer', 'Otros'][Math.floor(Math.random() * 3)],
+      diagnostico: diagnosticos[Math.floor(Math.random() * diagnosticos.length)],
+      centro: `Centro-${Math.floor(Math.random() * 1000)}`,
+      fecha_ingreso: `${Math.floor(Math.random() * 12) + 1}/${Math.floor(Math.random() * 28) + 1}/20`,
+      fecha_fin_contacto: `${Math.floor(Math.random() * 28) + 1}/${Math.floor(Math.random() * 12) + 1}/2020`,
+      estancia_dias: Math.floor(Math.random() * 30) + 1
+    }))
+
+    const startIndex = (currentPage - 1) * rowsPerPage
+    const endIndex = startIndex + rowsPerPage
+    const currentData = mockData.slice(startIndex, endIndex)
+    
+    setData(currentData)
+    setTotalRecords(mockData.length)
+    setTotalPages(Math.ceil(mockData.length / rowsPerPage))
+  }
 
   const handleComunidadChange = (comunidad) => {
     setFilters(prev => ({
@@ -66,6 +177,26 @@ const DataFilteringPage = () => {
         ? prev.sexo.filter(s => s !== sexo)
         : [...prev.sexo, sexo]
     }))
+  }
+
+  const handleCentroChange = (centro) => {
+    setFilters(prev => ({
+      ...prev,
+      centros: prev.centros.includes(centro)
+        ? prev.centros.filter(c => c !== centro)
+        : [...prev.centros, centro]
+    }))
+  }
+
+  const handleApplyFilters = () => {
+    setCurrentPage(1)
+    loadPatients(filters, 1)
+  }
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      loadPatients(filters, newPage)
+    }
   }
 
   return (
@@ -128,7 +259,7 @@ const DataFilteringPage = () => {
         <div className="filter-group">
           <h3>Comunidades Autónomas</h3>
           <div className="comunidades-grid">
-            {comunidadesAutonomas.map(comunidad => (
+            {(filterOptions.comunidades.length > 0 ? filterOptions.comunidades : comunidadesAutonomas).map(comunidad => (
               <label key={comunidad} className="checkbox-item">
                 <input
                   type="checkbox"
@@ -178,7 +309,7 @@ const DataFilteringPage = () => {
         <div className="filter-group">
           <h3>Sexo</h3>
           <div className="sexo-grid">
-            {['Hombre', 'Mujer', 'Otros'].map(sexo => (
+            {(filterOptions.sexos.length > 0 ? filterOptions.sexos : ['Hombre', 'Mujer', 'Otros']).map(sexo => (
               <label key={sexo} className="checkbox-item">
                 <input
                   type="checkbox"
@@ -191,11 +322,42 @@ const DataFilteringPage = () => {
           </div>
         </div>
 
+        {/* Centros */}
+        <div className="filter-group">
+          <h3>Centros</h3>
+          <div className="centros-grid" style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
+            gap: '10px',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            padding: '10px',
+            border: '1px solid #ddd',
+            borderRadius: '4px'
+          }}>
+            {filterOptions.centros.slice(0, 20).map(centro => (
+              <label key={centro} className="checkbox-item">
+                <input
+                  type="checkbox"
+                  checked={filters.centros.includes(centro)}
+                  onChange={() => handleCentroChange(centro)}
+                />
+                <span title={centro}>{centro.length > 25 ? centro.substring(0, 25) + '...' : centro}</span>
+              </label>
+            ))}
+          </div>
+          {filterOptions.centros.length > 20 && (
+            <p style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+              Mostrando los primeros 20 centros de {filterOptions.centros.length} disponibles
+            </p>
+          )}
+        </div>
+
         {/* Diagnósticos */}
         <div className="filter-group">
           <h3>Diagnósticos</h3>
           <div className="diagnosticos-grid">
-            {diagnosticos.map(diagnostico => (
+            {(filterOptions.diagnosticos.length > 0 ? filterOptions.diagnosticos : diagnosticos).map(diagnostico => (
               <label key={diagnostico} className="checkbox-item">
                 <input
                   type="checkbox"
@@ -206,12 +368,46 @@ const DataFilteringPage = () => {
               </label>
             ))}
           </div>
+          {/* Botón Filtrar debajo del rectángulo de diagnósticos */}
+          <div className="filter-actions">
+            <button
+              type="button"
+              className="apply-filter-btn"
+              aria-label="Aplicar filtros de búsqueda"
+              onClick={handleApplyFilters}
+              disabled={loading}
+            >
+              {loading ? 'Filtrando...' : 'Filtrar'}
+            </button>
+          </div>
         </div>
       </section>
 
       {/* Rectángulo 2: Resultado de la tabla */}
       <section className="results-section">
         <h2>Resultados del filtrado</h2>
+        
+        {error && (
+          <div className="error-message" style={{ 
+            background: '#ffebee', 
+            color: '#c62828', 
+            padding: '10px', 
+            borderRadius: '4px', 
+            marginBottom: '20px' 
+          }}>
+            {error}
+          </div>
+        )}
+        
+        {loading && (
+          <div className="loading-message" style={{ 
+            textAlign: 'center', 
+            padding: '20px', 
+            color: '#666' 
+          }}>
+            Cargando datos...
+          </div>
+        )}
         
         <div className="table-container">
           <table className="results-table">
@@ -222,18 +418,26 @@ const DataFilteringPage = () => {
                 <th>Comunidad</th>
                 <th>Año Nacimiento</th>
                 <th>Sexo</th>
+                <th>Centro</th>
+                <th>Fecha Ingreso</th>
+                <th>Fecha Fin</th>
+                <th>Estancia (días)</th>
                 <th>Diagnóstico</th>
               </tr>
             </thead>
             <tbody>
-              {currentData.map(row => (
+              {data.map(row => (
                 <tr key={row.id}>
                   <td>{row.id}</td>
                   <td>{row.nombre}</td>
                   <td>{row.comunidad}</td>
-                  <td>{row.añoNacimiento}</td>
+                  <td>{row.año_nacimiento}</td>
                   <td>{row.sexo}</td>
-                  <td>{row.diagnostico}</td>
+                  <td title={row.centro}>{row.centro?.length > 15 ? row.centro.substring(0, 15) + '...' : row.centro}</td>
+                  <td>{row.fecha_ingreso}</td>
+                  <td>{row.fecha_fin_contacto}</td>
+                  <td>{row.estancia_dias}</td>
+                  <td title={row.diagnostico}>{row.diagnostico?.length > 30 ? row.diagnostico.substring(0, 30) + '...' : row.diagnostico}</td>
                 </tr>
               ))}
             </tbody>
@@ -243,20 +447,20 @@ const DataFilteringPage = () => {
         {/* Paginación */}
         <div className="pagination">
           <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1 || loading}
             className="pagination-btn"
           >
             Anterior
           </button>
           
           <span className="pagination-info">
-            Página {currentPage} de {totalPages} ({mockData.length} registros total.)
+            Página {currentPage} de {totalPages} ({totalRecords} registros total.)
           </span>
           
           <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages || loading}
             className="pagination-btn"
           >
             Siguiente
