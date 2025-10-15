@@ -14,6 +14,8 @@ import './App.css'
 import './styles/pages.css'
 
 function App() {
+  console.log('App component rendered') // Debug
+  
   return (
     <Router>
       <div className="App">
