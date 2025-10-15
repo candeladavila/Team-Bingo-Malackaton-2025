@@ -251,7 +251,7 @@ const DataFilteringPage = () => {
           </button>
           
           <span className="pagination-info">
-            Página {currentPage} de {totalPages} ({mockData.length} registros total)
+            Página {currentPage} de {totalPages} ({mockData.length} registros total.)
           </span>
           
           <button
