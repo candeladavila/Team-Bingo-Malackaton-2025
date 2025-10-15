@@ -107,7 +107,7 @@ const LandingPage = () => {
             </div>
             
             {/* Título principal superpuesto */}
-            <h1 className="main-title">Insight</h1>
+            <h1 className="main-title">Insight </h1>
           </div>
           
           {/* Texto introductorio */}
