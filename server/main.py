@@ -5,6 +5,15 @@ from typing import List, Optional
 from services.patient_filter_service import PatientFilterService
 from services.visualization_service import VisualizationService
 
+import os
+
+wallet_path = os.environ.get("WALLET_PATH")
+print("WALLET_PATH:", wallet_path)
+if wallet_path and os.path.exists(wallet_path):
+    print("Archivos en wallet:", os.listdir(wallet_path))
+else:
+    print("No se encuentra la carpeta wallet en:", wallet_path)
+
 app = FastAPI(title="Team Bingo Malackaton API", version="1.0.0")
 
 # Configurar CORS
