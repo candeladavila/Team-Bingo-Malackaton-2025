@@ -449,16 +449,20 @@ const DataFilteringPage = () => {
                 <th>Comunidad Autónoma</th>
                 <th>Año de Nacimiento</th>
                 <th>Sexo</th>
-                <th>Diagnóstico</th>
+                <th>Centro Médico</th>
+                <th>Fecha de Ingreso</th>
+                <th>Fecha de Fin de Contacto</th>
+                <th>Estancia (días)</th>
+                <th>Diagnóstico Completo</th>
               </tr>
             </thead>
             <tbody>
               {data.map(row => (
                 <tr key={row.id}>
                   <td>{row.id}</td>
-                  <td>{row.nombre}</td>
-                  <td>{row.comunidad}</td>
-                  <td>{row.añoNacimiento}</td>
+                  <td title={row.nombre}>{row.nombre}</td>
+                  <td title={row.comunidad}>{row.comunidad}</td>
+                  <td>{row.año_nacimiento}</td>
                   <td>{row.sexo}</td>
                   <td title={row.centro}>{row.centro}</td>
                   <td>{formatDate(row.fecha_ingreso)}</td>
