@@ -1,0 +1,140 @@
+/* Tema oscuro */
+:root {
+  --bg-light: #ffffff;
+  --text-light: #333333;
+  --primary-light: #4a90e2;
+  --secondary-light: #f5f5f5;
+  --border-light: #e0e0e0;
+
+  --bg-dark: #1a1a1a;
+  --text-dark: #ffffff;
+  --primary-dark: #6ba7e9;
+  --secondary-dark: #2d2d2d;
+  --border-dark: #404040;
+}
+
+/* Tema claro (default) */
+body {
+  background-color: var(--bg-light);
+  color: var(--text-light);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Tema oscuro */
+body.dark-mode {
+  background-color: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+.dark-mode .accessibility-config-page {
+  background-color: var(--bg-dark);
+}
+
+.dark-mode .config-section {
+  background-color: var(--secondary-dark);
+  border-color: var(--border-dark);
+}
+
+.dark-mode button {
+  background-color: var(--primary-dark);
+  color: var(--text-dark);
+}
+
+.dark-mode select,
+.dark-mode input[type="text"] {
+  background-color: var(--secondary-dark);
+  color: var(--text-dark);
+  border-color: var(--border-dark);
+}
+
+/* Animación del filtro */
+.filter-transition-enter {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.filter-transition-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 200ms, transform 200ms;
+}
+
+/* Estilos para el modal de atajos de teclado */
+.keyboard-shortcuts-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--bg-light);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-width: 500px;
+  width: 90%;
+}
+
+.dark-mode .keyboard-shortcuts-modal {
+  background-color: var(--secondary-dark);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.keyboard-shortcuts-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.keyboard-shortcut-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.dark-mode .keyboard-shortcut-item {
+  border-bottom-color: var(--border-dark);
+}
+
+kbd {
+  background-color: var(--secondary-light);
+  border: 1px solid var(--border-light);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 0.9em;
+  font-family: monospace;
+}
+
+.dark-mode kbd {
+  background-color: var(--secondary-dark);
+  border-color: var(--border-dark);
+}
+
+/* Botones de idioma */
+.language-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.language-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.language-button.active {
+  background-color: var(--primary-light);
+  color: white;
+}
+
+.dark-mode .language-button.active {
+  background-color: var(--primary-dark);
+}

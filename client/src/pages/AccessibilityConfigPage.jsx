@@ -1,204 +1,181 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
+import { useAccessibility } from '../context/AccessibilityContext';
+import './AccessibilityConfigPage.css';
 
 const AccessibilityConfigPage = () => {
-  const [settings, setSettings] = useState({
-    fontSize: 'medium',
-    contrast: 'normal',
-    colorBlindness: 'none',
-    animations: true,
-    screenReader: false,
-    keyboardNavigation: true,
-    language: 'es',
-    theme: 'light'
-  })
+  const {
+    language,
+    setLanguage,
+    darkMode,
+    setDarkMode,
+    fontSize,
+    setFontSize,
+    t,
+    keyboardShortcuts,
+    showKeyboardShortcuts,
+    setShowKeyboardShortcuts
+  } = useAccessibility();
 
-  const handleSettingChange = (setting, value) => {
-    setSettings(prev => ({
-      ...prev,
-      [setting]: value
-    }))
-  }
+  const handleLanguageChange = (lang) => {
+    setLanguage(lang);
+  };
 
+  const handleDarkModeToggle = () => {
+    setDarkMode(!darkMode);
+  };
+
+  const toggleKeyboardShortcuts = () => {
+    setShowKeyboardShortcuts(!showKeyboardShortcuts);
+  };
+
+  const handleFontSizeChange = (size) => {
+    setFontSize(size);
+  };
+
+  // Restaurar valores por defecto
   const resetToDefaults = () => {
-    setSettings({
-      fontSize: 'medium',
-      contrast: 'normal',
-      colorBlindness: 'none',
-      animations: true,
-      screenReader: false,
-      keyboardNavigation: true,
-      language: 'es',
-      theme: 'light'
-    })
-  }
+    // Primero limpiamos el localStorage
+    localStorage.removeItem('language');
+    localStorage.removeItem('darkMode');
+    localStorage.removeItem('fontSize');
+    
+    // Luego actualizamos los estados en orden
+    setShowKeyboardShortcuts(false);
+    setDarkMode(false);
+    setFontSize('medium');
+    setLanguage('es');  // El idioma al final para asegurar que las traducciones se actualicen correctamente
+    
+    // Forzamos la actualización del documento
+    document.documentElement.classList.remove('dark-mode');
+    document.documentElement.style.fontSize = '16px';
+  };
+
+  // Atajos de teclado
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.altKey) {
+        switch (e.key.toLowerCase()) {
+          case 'l':
+            setLanguage(prev => prev === 'es' ? 'en' : 'es');
+            break;
+          case 'd':
+            setDarkMode(prev => !prev);
+            break;
+          case 'k':
+            setShowKeyboardShortcuts(prev => !prev);
+            break;
+          default:
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [setLanguage, setDarkMode, setShowKeyboardShortcuts]);
 
   return (
     <div className="accessibility-config-page">
       <header className="page-header">
         <h1>Configuración de Accesibilidad</h1>
-        <p>Personaliza la interfaz según tus necesidades de accesibilidad</p>
+        <p>{t('subtitle')}</p>
       </header>
-      
+
       <section className="config-sections">
+        {/* Configuración de idioma */}
         <div className="config-section">
-          <h2>👁️ Configuración Visual</h2>
-          
-          <div className="setting-group">
-            <label>Tamaño de Fuente:</label>
-            <select 
-              value={settings.fontSize} 
-              onChange={(e) => handleSettingChange('fontSize', e.target.value)}
+          <h2>Configuración de idioma</h2>
+          <div className="font-size-buttons">
+            <button
+              className={`font-size-button ${language === 'es' ? 'active' : ''}`}
+              onClick={() => handleLanguageChange('es')}
             >
-              <option value="small">Pequeño</option>
-              <option value="medium">Mediano</option>
-              <option value="large">Grande</option>
-              <option value="extra-large">Extra Grande</option>
-            </select>
-          </div>
-          
-          <div className="setting-group">
-            <label>Contraste:</label>
-            <select 
-              value={settings.contrast} 
-              onChange={(e) => handleSettingChange('contrast', e.target.value)}
+              Español
+            </button>
+            <button
+              className={`font-size-button ${language === 'en' ? 'active' : ''}`}
+              onClick={() => handleLanguageChange('en')}
             >
-              <option value="normal">Normal</option>
-              <option value="high">Alto Contraste</option>
-              <option value="extra-high">Contraste Máximo</option>
-            </select>
-          </div>
-          
-          <div className="setting-group">
-            <label>Tema:</label>
-            <select 
-              value={settings.theme} 
-              onChange={(e) => handleSettingChange('theme', e.target.value)}
-            >
-              <option value="light">Claro</option>
-              <option value="dark">Oscuro</option>
-              <option value="auto">Automático</option>
-            </select>
-          </div>
-          
-          <div className="setting-group">
-            <label>Daltonismo:</label>
-            <select 
-              value={settings.colorBlindness} 
-              onChange={(e) => handleSettingChange('colorBlindness', e.target.value)}
-            >
-              <option value="none">Ninguno</option>
-              <option value="protanopia">Protanopia</option>
-              <option value="deuteranopia">Deuteranopia</option>
-              <option value="tritanopia">Tritanopia</option>
-            </select>
+              English
+            </button>
           </div>
         </div>
-        
+
+        {/* Configuración de modo oscuro */}
         <div className="config-section">
-          <h2>🎮 Configuración de Interacción</h2>
-          
-          <div className="setting-group">
-            <label>
-              <input 
-                type="checkbox" 
-                checked={settings.animations}
-                onChange={(e) => handleSettingChange('animations', e.target.checked)}
+          <h2>Configuración de modo oscuro</h2>
+          <div className="dark-mode-toggle">
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={darkMode}
+                onChange={handleDarkModeToggle}
               />
-              Habilitar Animaciones
+              <span className="toggle-slider"></span>
             </label>
-            <p className="setting-description">
-              Desactiva para reducir el movimiento en pantalla
-            </p>
-          </div>
-          
-          <div className="setting-group">
-            <label>
-              <input 
-                type="checkbox" 
-                checked={settings.keyboardNavigation}
-                onChange={(e) => handleSettingChange('keyboardNavigation', e.target.checked)}
-              />
-              Navegación por Teclado Mejorada
-            </label>
-            <p className="setting-description">
-              Mejora los indicadores de foco para navegación por teclado
-            </p>
-          </div>
-          
-          <div className="setting-group">
-            <label>
-              <input 
-                type="checkbox" 
-                checked={settings.screenReader}
-                onChange={(e) => handleSettingChange('screenReader', e.target.checked)}
-              />
-              Optimización para Lectores de Pantalla
-            </label>
-            <p className="setting-description">
-              Mejora la compatibilidad con tecnologías asistivas
-            </p>
           </div>
         </div>
-        
+
+        {/* Tamaño de letra */}
         <div className="config-section">
-          <h2>🌐 Configuración de Idioma</h2>
-          
-          <div className="setting-group">
-            <label>Idioma de la Interfaz:</label>
-            <select 
-              value={settings.language} 
-              onChange={(e) => handleSettingChange('language', e.target.value)}
+          <h2>Tamaño de letra</h2>
+          <div className="font-size-buttons">
+            <button
+              className={`font-size-button ${fontSize === 'small' ? 'active' : ''}`}
+              onClick={() => handleFontSizeChange('small')}
+              style={{ fontSize: '14px' }}
             >
-              <option value="es">Español</option>
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-              <option value="de">Deutsch</option>
-              <option value="pt">Português</option>
-            </select>
+              Pequeño
+            </button>
+            <button
+              className={`font-size-button ${fontSize === 'medium' ? 'active' : ''}`}
+              onClick={() => handleFontSizeChange('medium')}
+              style={{ fontSize: '16px' }}
+            >
+              Mediano
+            </button>
+            <button
+              className={`font-size-button ${fontSize === 'large' ? 'active' : ''}`}
+              onClick={() => handleFontSizeChange('large')}
+              style={{ fontSize: '18px' }}
+            >
+              Grande
+            </button>
+            <button
+              className={`font-size-button ${fontSize === 'extra-large' ? 'active' : ''}`}
+              onClick={() => handleFontSizeChange('extra-large')}
+              style={{ fontSize: '20px' }}
+            >
+              Muy Grande
+            </button>
           </div>
         </div>
+
+        {/* Atajos de teclado */}
+        <div className="config-section">
+          <h2>Atajos de teclado</h2>
+          <button onClick={toggleKeyboardShortcuts}>
+            {showKeyboardShortcuts ? 'Ocultar atajos' : 'Mostrar atajos'}
+          </button>
+
+          {showKeyboardShortcuts && (
+            <div className="keyboard-shortcuts-dropdown">
+              {Object.entries(keyboardShortcuts.navigation).map(([key, description]) => (
+                <div key={key} className="keyboard-shortcut-item">
+                  <kbd>{key}</kbd>
+                  <span>{description}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </section>
-      
-      <section className="preview-section">
-        <h2>Vista Previa</h2>
-        <div className="preview-container" style={{
-          fontSize: settings.fontSize === 'large' ? '1.2em' : '1em',
-          filter: settings.contrast === 'high' ? 'contrast(150%)' : 'none'
-        }}>
-          <h3>Ejemplo de texto con la configuración actual</h3>
-          <p>
-            Este es un texto de ejemplo que muestra cómo se verá la interfaz 
-            con tu configuración actual de accesibilidad.
-          </p>
-          <button>Botón de ejemplo</button>
-        </div>
-      </section>
-      
+
       <section className="action-buttons">
-        <button className="save-button">Guardar Configuración</button>
         <button className="reset-button" onClick={resetToDefaults}>
-          Restaurar Valores por Defecto
+          {t('resetDefaults')}
         </button>
-      </section>
-      
-      <section className="help-section">
-        <h2>💡 Ayuda de Accesibilidad</h2>
-        <div className="help-content">
-          <h3>Atajos de Teclado:</h3>
-          <ul>
-            <li><kbd>Tab</kbd> - Navegar entre elementos</li>
-            <li><kbd>Shift + Tab</kbd> - Navegar hacia atrás</li>
-            <li><kbd>Enter</kbd> o <kbd>Espacio</kbd> - Activar botones</li>
-            <li><kbd>Esc</kbd> - Cerrar diálogos</li>
-            <li><kbd>Alt + H</kbd> - Ir al inicio</li>
-          </ul>
-          
-          <h3>¿Necesitas más ayuda?</h3>
-          <p>
-            Si tienes necesidades específicas de accesibilidad que no están cubiertas 
-            por estas opciones, por favor contáctanos en accesibilidad@teamproject.com
-          </p>
-        </div>
       </section>
     </div>
   )
