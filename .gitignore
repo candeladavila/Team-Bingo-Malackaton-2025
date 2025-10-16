@@ -117,6 +117,3 @@ config/credentials.json
 *.env
 
 # Ignorar wallet
-wallet/
-*/wallet/
-wallet/*
