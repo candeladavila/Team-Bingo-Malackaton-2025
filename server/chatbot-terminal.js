@@ -19,21 +19,26 @@ const AI_PROVIDERS = {
 // Esquema de base de datos
 const DATABASE_SCHEMA = `
 TABLAS DISPONIBLES EN ORACLE:
-- VISTA_MUY_INTERESANTE (region, enfermedad, num_casos)
-  • region: Comunidad Autónoma (Texto)
-  • enfermedad: Diagnóstico Principal (Texto) 
-  • num_casos: Número de casos (Número)
-
-EJEMPLOS DE CONSULTAS VÁLIDAS:
-- "SELECT region, enfermedad, num_casos FROM VISTA_MUY_INTERESANTE WHERE region LIKE '%Andalucía%' AND enfermedad LIKE '%esquizofrenia%'"
-- "SELECT enfermedad, SUM(num_casos) as total FROM VISTA_MUY_INTERESANTE GROUP BY enfermedad ORDER BY total DESC"
-- "SELECT region, COUNT(*) as tipos_enfermedad FROM VISTA_MUY_INTERESANTE GROUP BY region"
+- VISTA_MUY_INTERESANTE (PORCENTAJE_HOMBRES, ESTANCIA_MEDIA, TASA_MORTALIDAD, SEVERIDAD_MEDIA, TASA_UCI, COSTE_MEDIO, MES_DE_INGRESO, DIAGNOSTICO_PRINCIPAL, CATEGORIA, FRECUENCIA, HOSPITALES_QUE_REPORTAN, EDAD_MEDIA)
+COLUMN_NAME             
+----------------------- 
+PORCENTAJE_HOMBRES - Porcentaje de pacientes hombres con esta patología
+ESTANCIA_MEDIA - Promedio de días de estancia hospitalaria
+TASA_MORTALIDAD - Porcentaje de fallecimientos entre los casos
+SEVERIDAD_MEDIA - Nivel promedio de gravedad de los pacientes (1-4)
+TASA_UCI - Porcentaje de casos que requirieron ingreso en UCI
+COSTE_MEDIO - Coste económico promedio por episodio
+MES_DE_INGRESO - Mes del año en que ocurrió el ingreso
+DIAGNOSTICO_PRINCIPAL - Código CIE-10 del diagnóstico principal
+CATEGORIA - Grupo o categoría clínica del diagnóstico
+FRECUENCIA - Número total de episodios registrados
+HOSPITALES_QUE_REPORTAN - Número de centros que reportan esta patología
+EDAD_MEDIA - Edad promedio de los pacientes afectados    
 
 RESTRICCIONES:
 - Usar sólo la tabla VISTA_MUY_INTERESANTE
 - No usar comillas en nombres de columnas
 - Usar SQL compatible con Oracle
-- Usar LIKE para búsquedas de texto
 `;
 
 // Prompt para generar SQL
@@ -47,8 +52,6 @@ INSTRUCCIONES CRÍTICAS:
 1. Genera SQL válido para Oracle
 2. Usa sólo columnas existentes en el esquema
 3. No incluyas explicaciones, sólo el SQL
-4. Para búsquedas de texto usa LIKE con %%
-5. Ordena por num_casos DESC cuando sea relevante
 6. Usa siempre la tabla VISTA_MUY_INTERESANTE
 
 PREGUNTA DEL USUARIO: {userQuestion}
@@ -57,6 +60,7 @@ Responde ÚNICAMENTE con el SQL, sin explicaciones ni formato markdown.`;
 
 // Funciones de detección
 function isDataQuery(message) {
+  console.log("Se ha considerado DataQuery...")
   const lowerMsg = message.toLowerCase();
   
   const dataKeywords = [
@@ -110,7 +114,7 @@ async function generateSQL(userQuestion) {
     sql = sql.replace(/```sql/g, '').replace(/```/g, '').trim();
     sql = sql.replace(/;$/g, '');
     
-    console.log('   ✅ SQL Generado:', sql);
+    console.log('   ✅ SQL Generado:\n', sql);
     return sql;
     
   } catch (error) {
@@ -130,8 +134,9 @@ async function generateSQL(userQuestion) {
 function getBackupSQL(question) {
   const lowerQ = question.toLowerCase();
   
+  
   if (lowerQ.includes('esquizofrenia') && lowerQ.includes('andalucía')) {
-    return "SELECT region, enfermedad, num_casos FROM VISTA_MUY_INTERESANTE WHERE region LIKE '%Andalucía%' AND enfermedad LIKE '%esquizofrenia%'";
+    return "SELECT * FROM VISTA_MUY_INTERESANTE;";
   }
   if (lowerQ.includes('depresión') && lowerQ.includes('madrid')) {
     return "SELECT region, enfermedad, num_casos FROM VISTA_MUY_INTERESANTE WHERE region LIKE '%Madrid%' AND enfermedad LIKE '%depresión%'";
@@ -175,11 +180,12 @@ async function processChatMessage(message) {
         
         reply = `💙 Según los datos del sistema de salud mental:\n\n`;
         
-        queryResults.forEach((row, index) => {
-          reply += `• **${row.REGION}**: ${row.NUM_CASOS} casos de ${row.ENFERMEDAD}\n`;
-        });
+        //queryResults.forEach((row, index) => {
+        //  reply += `• **(${row.DIAGNOSTICO_PRINCIPAL}, ${row.CATEGORIA}, ${row.FRECUENCIA}, ${row.HOSPITALES_QUE_REPORTAN}, ...)**\n`;
+        //});
         
         reply += `\nEstos datos representan la situación actual en el sistema de salud público.`;
+        console.log(queryResults);
       } else {
         reply = "💙 No se encontraron datos específicos para tu consulta en la base de datos.";
       }
