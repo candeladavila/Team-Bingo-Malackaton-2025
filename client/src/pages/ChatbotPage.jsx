@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
+import './ChatbotPage.css'
+import ListenButton from '../components/ListenButton'  // 👈 Importa el botón
 
 const ChatbotPage = () => {
   const [messages, setMessages] = useState([
@@ -57,6 +59,7 @@ const ChatbotPage = () => {
 
   return (
     <div className="chatbot-page">
+      <ListenButton />  {/* 👈 Añade el botón aquí */}
       <header className="page-header">
         <h1>Asistente Virtual</h1>
         <p>Pregúntame cualquier cosa sobre el análisis de datos</p>

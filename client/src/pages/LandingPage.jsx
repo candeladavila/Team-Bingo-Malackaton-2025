@@ -1,6 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import './LandingPage.css'
+import ListenButton from '../components/ListenButton'  // 👈 Importa el botón
 
 const LandingPage = () => {
   const navigate = useNavigate()
@@ -23,6 +24,7 @@ const LandingPage = () => {
 
   return (
     <div className="landing-page">
+      <ListenButton />  {/* 👈 Añade el botón aquí */}
       {/* Puntos animados de fondo */}
       <div className="animated-dots">
         {Array.from({ length: 25 }).map((_, i) => (

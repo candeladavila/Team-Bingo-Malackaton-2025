@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import './DataFilteringPage.css'
+import ListenButton from '../components/ListenButton'  // 👈 Importa el botón
 
 const DataFilteringPage = () => {
   const [filters, setFilters] = useState({
@@ -232,8 +233,11 @@ const DataFilteringPage = () => {
 
   return (
     <div className="data-filtering-page clean-page">
+      
       {/* Animaciones de fondo */}
+      
       <div className="background-animations">
+       
         {/* Hojas y puntos estáticos con pulsación */}
         <div className="static-element static-leaf-large"></div>
         <div className="static-element static-dot-medium"></div>
@@ -265,6 +269,7 @@ const DataFilteringPage = () => {
         <div className="static-element static-dot-large"></div>
         <div className="static-element static-leaf-medium"></div>
         <div className="static-element static-dot-small"></div>
+         
         
         {/* Hojas que caen */}
         <div className="falling-element falling-leaf-large"></div>
@@ -276,7 +281,8 @@ const DataFilteringPage = () => {
         <div className="falling-element falling-leaf-large"></div>
         <div className="falling-element falling-leaf-medium"></div>
       </div>
-
+      {/* Contenido principal */}
+      <ListenButton />  {/* 👈 Añade el botón aquí */}
       <header className="page-header">
         <h1>Filtrado de Datos</h1>
         <p>Aplica filtros avanzados para refinar tu conjunto de datos</p>
@@ -441,6 +447,7 @@ const DataFilteringPage = () => {
         )}
         
         <div className="table-container">
+          
           <table className="results-table">
             <thead>
               <tr>
@@ -477,6 +484,7 @@ const DataFilteringPage = () => {
 
         {/* Paginación */}
         <div className="pagination">
+          
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1 || loading}
@@ -495,7 +503,9 @@ const DataFilteringPage = () => {
         </div>
       </section>
     </div>
+    
   )
+  
 }
 
 export default DataFilteringPage
