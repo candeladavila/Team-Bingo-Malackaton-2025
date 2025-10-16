@@ -115,3 +115,8 @@ temp/
 # En server/.gitignore
 config/credentials.json
 *.env
+
+# Ignorar wallet
+wallet/
+*/wallet/
+wallet/*
