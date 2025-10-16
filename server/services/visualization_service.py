@@ -10,21 +10,33 @@ class VisualizationService:
     """Servicio para generar datos de visualización"""
     
     def __init__(self):
-        # Cargar variables de entorno
-        dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
-        load_dotenv(dotenv_path)
-        
+        # Solo cargar .env si estamos en desarrollo (no en Vercel)
+        if os.environ.get("VERCEL") != "1":
+            dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+            if os.path.exists(dotenv_path):
+                load_dotenv(dotenv_path)
+
         self.wallet_path = os.getenv("WALLET_PATH")
-        
         # Si wallet_path contiene ${PWD}, reemplazarlo con el directorio actual
         if self.wallet_path and "${PWD}" in self.wallet_path:
             current_dir = os.path.dirname(os.path.dirname(__file__))
             self.wallet_path = self.wallet_path.replace("${PWD}", current_dir)
-        
+
         self.wallet_password = os.getenv("WALLET_PASSWORD")
         self.user = os.getenv("DB_USER")
         self.user_password = os.getenv("DB_PASSWORD")
         self.dsn = os.getenv("DB_TNS_ALIAS")
+
+        # Validar que todas las variables críticas están presentes
+        missing = [k for k, v in {
+            'WALLET_PATH': self.wallet_path,
+            'WALLET_PASSWORD': self.wallet_password,
+            'DB_USER': self.user,
+            'DB_PASSWORD': self.user_password,
+            'DB_TNS_ALIAS': self.dsn
+        }.items() if not v]
+        if missing:
+            raise RuntimeError(f"Faltan variables de entorno requeridas: {', '.join(missing)}")
     
     def get_connection(self):
         """Establece conexión con la base de datos Oracle"""
