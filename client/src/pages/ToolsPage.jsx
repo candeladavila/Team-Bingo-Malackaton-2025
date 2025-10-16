@@ -1,6 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import './ToolsPage.css'
+import ListenButton from '../components/ListenButton'  // 👈 Importa el botón
 
 const ToolsPage = () => {
   const navigate = useNavigate()
@@ -20,6 +21,7 @@ const ToolsPage = () => {
 
   return (
     <div className="tools-page">
+      <ListenButton />  {/* 👈 Añade el botón aquí */}
       {/* Elementos animados de fondo */}
       <div className="animated-background">
         {/* Hojas animadas */}

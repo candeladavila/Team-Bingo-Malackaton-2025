@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import './DataVisualizationPage.css'
+import ListenButton from '../components/ListenButton'  // 👈 Importa el botón
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -379,6 +382,7 @@ const DataVisualizationPage = () => {
 
   return (
     <div className="data-visualization-page">
+      <ListenButton />  {/* 👈 Añade el botón aquí */}
       <div className="bg-dots" aria-hidden="true">
         {bgDots.map(dot => (
           <span
