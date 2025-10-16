@@ -13,9 +13,6 @@ const ToolsPage = () => {
       case 'representacion':
         navigate('/data-visualization')
         break
-      case 'chatbot':
-        navigate('/chatbot')
-        break
       default:
         break
     }
@@ -57,7 +54,7 @@ const ToolsPage = () => {
       <header className="tools-header">
         <h1>Herramientas</h1>
         <p className="tools-subtitle">
-          Analiza, visualiza y comprende los datos de salud mental con nuestras herramientas de filtrado, gráficos interactivos y chatbot inteligente.
+          Analiza, visualiza y comprende los datos de salud mental con nuestras herramientas de filtrado y gráficos interactivos.
         </p>
       </header>
 
@@ -89,18 +86,7 @@ const ToolsPage = () => {
           </button>
         </div>
         
-        <div className="white-rectangle">
-          <h3 className="tool-title">Chatbot</h3>
-          <div className="tool-icon-container">
-            <span className="tool-icon">🤖</span>
-          </div>
-          <button 
-            className="tool-button"
-            onClick={() => handleNavigation('chatbot')}
-          >
-            Prueba aquí
-          </button>
-        </div>
+        {/* Chatbot tool removed per project requirements */}
       </section>
 
       {/* Silueta del bosque */}

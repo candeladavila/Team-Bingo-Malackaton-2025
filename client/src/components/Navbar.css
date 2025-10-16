@@ -45,8 +45,21 @@
 }
 
 .brand-icon {
-  font-size: 1.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  overflow: hidden;
   animation: pulse 2s infinite;
+}
+
+.brand-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .brand-text {
@@ -239,8 +252,6 @@
   width: 20px;
   text-align: center;
 }
-
-/* Dropdown Overlay */
 .dropdown-overlay {
   position: fixed;
   top: 0;
@@ -322,6 +333,10 @@
   .brand-button {
     font-size: 1.2rem;
     padding: 6px 10px;
+  .brand-icon {
+    width: 34px;
+    height: 34px;
+  }
   }
   
   .brand-text {

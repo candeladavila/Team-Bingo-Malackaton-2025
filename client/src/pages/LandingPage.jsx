@@ -21,14 +21,6 @@ const LandingPage = () => {
     }, 100)
   }
 
-  const navigateToChatbot = () => {
-    navigate('/chatbot', { replace: false })
-    // Asegurar que la página se muestre desde el principio
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }, 100)
-  }
-
   return (
     <div className="landing-page">
       {/* Puntos animados de fondo */}
@@ -162,8 +154,7 @@ const LandingPage = () => {
           <div className="content-card">
             <h2>Nuestras herramientas 🧰</h2>
             <p>
-              Explora visualizaciones interactivas y análisis comparativos entre comunidades autónomas, categorías clínicas y tendencias temporales.
-Nuestra plataforma combina visualización avanzada, pensamiento analítico y modelos de IA para extraer insights relevantes que impulsen la investigación en salud mental.
+              Explora los datos clínicos de forma interactiva mediante nuestras herramientas de filtrado y visualización. Aplica filtros personalizados para segmentar la información y representa los resultados con histogramas y diagramas de sectores que facilitan el análisis comparativo entre comunidades autónomas, categorías clínicas y tendencias temporales.
             </p>
             <div className="tools-preview">
               <div 
@@ -180,13 +171,7 @@ Nuestra plataforma combina visualización avanzada, pensamiento analítico y mod
               >
                 📊
               </div>
-              <div 
-                className="tool-icon clickable" 
-                onClick={navigateToChatbot}
-                title="Chatbot IA"
-              >
-                🤖
-              </div>
+              {/* Chatbot icon removed */}
             </div>
           </div>
         </div>
