@@ -1,352 +1,205 @@
-// chatbot-terminal.js - VERSIÓN CON OPENAI (FUNCIONA)
+/**
+ * chatbot_con_interpretacion.js
+ * * Lógica principal del chatbot de terminal que implementa un flujo "agentic":
+ * 1. Detecta la intención del usuario (datos, urgencia o general).
+ * 2. Genera una consulta SQL si es necesario.
+ * 3. Ejecuta la consulta en la base de datos Oracle.
+ * 4. Interpreta los resultados con IA para dar una respuesta con sentido.
+ */
+
 import OpenAI from "openai";
 import Database from './database.js';
 import dotenv from 'dotenv';
 import readline from 'readline';
+import { DATABASE_SCHEMA, SQL_GENERATION_PROMPT, DATA_INTERPRETATION_PROMPT } from './config.js';
 
 dotenv.config();
 
-// Configuración con OpenAI (MÁS CONFIABLE)
-const AI_PROVIDERS = {
-  openai: {
-    name: "OpenAI GPT",
-    enabled: !!process.env.OPENAI_API_KEY,
-    client: process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null,
-    model: "gpt-4o-mini"  // Rápido y económico
-  }
-};
+// --- CONFIGURACIÓN DE IA ---
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const AI_MODEL = "gpt-4o-mini";
 
-// Esquema de base de datos
-const DATABASE_SCHEMA = `
-TABLAS DISPONIBLES EN ORACLE:
-- VISTA_MUY_INTERESANTE (PORCENTAJE_HOMBRES, ESTANCIA_MEDIA, TASA_MORTALIDAD, SEVERIDAD_MEDIA, TASA_UCI, COSTE_MEDIO, MES_DE_INGRESO, DIAGNOSTICO_PRINCIPAL, CATEGORIA, FRECUENCIA, HOSPITALES_QUE_REPORTAN, EDAD_MEDIA)
-COLUMN_NAME             
------------------------ 
-PORCENTAJE_HOMBRES - Porcentaje de pacientes hombres con esta patología
-ESTANCIA_MEDIA - Promedio de días de estancia hospitalaria
-TASA_MORTALIDAD - Porcentaje de fallecimientos entre los casos
-SEVERIDAD_MEDIA - Nivel promedio de gravedad de los pacientes (1-4)
-TASA_UCI - Porcentaje de casos que requirieron ingreso en UCI
-COSTE_MEDIO - Coste económico promedio por episodio
-MES_DE_INGRESO - Mes del año en que ocurrió el ingreso
-DIAGNOSTICO_PRINCIPAL - Código CIE-10 del diagnóstico principal
-CATEGORIA - Grupo o categoría clínica del diagnóstico
-FRECUENCIA - Número total de episodios registrados
-HOSPITALES_QUE_REPORTAN - Número de centros que reportan esta patología
-EDAD_MEDIA - Edad promedio de los pacientes afectados    
+// --- FUNCIONES DE IA ---
 
-RESTRICCIONES:
-- Usar sólo la tabla VISTA_MUY_INTERESANTE
-- No usar comillas en nombres de columnas
-- Usar SQL compatible con Oracle
-`;
+/**
+ * Genera una consulta SQL a partir de la pregunta de un usuario.
+ * @param {string} userQuestion - La pregunta del usuario.
+ * @returns {Promise<string>} La consulta SQL generada.
+ */
+async function generateSQL(userQuestion) {
+    const prompt = SQL_GENERATION_PROMPT.replace('{userQuestion}', userQuestion);
+    try {
+        console.log('   🤖 Pidiendo a la IA que genere el SQL...');
+        const completion = await openai.chat.completions.create({
+            model: AI_MODEL,
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.1, // Muy bajo para que sea preciso
+        });
+        const sql = completion.choices[0].message.content.trim().replace(/;$/, '');
+        console.log('   ✅ SQL Generado:', sql);
+        return sql;
+    } catch (error) {
+        console.error('   ❌ Error generando SQL:', error.message);
+        throw new Error("No pude crear la consulta para buscar en la base de datos.");
+    }
+}
 
-// Prompt para generar SQL
-const SQL_GENERATION_PROMPT = `Eres un experto en SQL para Oracle especializado en salud mental. 
-Genera SOLO la consulta SQL compatible con Oracle.
+/**
+ * Interpreta los resultados de la base de datos para dar una respuesta en lenguaje natural.
+ * @param {Array<Object>} queryResults - Los resultados de la consulta SQL.
+ * @param {string} originalQuestion - La pregunta original del usuario.
+ * @returns {Promise<string>} La respuesta interpretada y humanizada.
+ */
+async function interpretResults(queryResults, originalQuestion) {
+    const prompt = DATA_INTERPRETATION_PROMPT
+        .replace('{originalQuestion}', originalQuestion)
+        .replace('{queryResults}', JSON.stringify(queryResults, null, 2));
 
-ESQUEMA DE LA BASE DE DATOS:
-${DATABASE_SCHEMA}
+    try {
+        console.log('   🧠 Pidiendo a la IA que interprete los resultados...');
+        const completion = await openai.chat.completions.create({
+            model: AI_MODEL,
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7, // Más creativo para una respuesta natural
+        });
+        const interpretation = completion.choices[0].message.content.trim();
+        console.log('   ✅ Interpretación generada.');
+        return interpretation;
+    } catch (error) {
+        console.error('   ❌ Error interpretando los datos:', error.message);
+        return "He encontrado los datos, pero he tenido dificultades para interpretarlos. Aquí están en formato bruto: " + JSON.stringify(queryResults);
+    }
+}
 
-INSTRUCCIONES CRÍTICAS:
-1. Genera SQL válido para Oracle
-2. Usa sólo columnas existentes en el esquema
-3. No incluyas explicaciones, sólo el SQL
-6. Usa siempre la tabla VISTA_MUY_INTERESANTE
+/**
+ * Genera una respuesta conversacional general.
+ * @param {string} message - El mensaje del usuario.
+ * @returns {Promise<string>} La respuesta generada por la IA.
+ */
+async function generateGeneralResponse(message) {
+    console.log("   💬 Es una pregunta general. Generando respuesta con IA...");
+    const prompt = `Eres "Acompaña", un asistente de IA empático. Tu función principal es dar datos de salud mental en España. Responde de forma breve y amable a esta pregunta general, recordando al usuario tu propósito principal. Pregunta: "${message}"`;
+    try {
+        const completion = await openai.chat.completions.create({
+            model: AI_MODEL,
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7,
+        });
+        return completion.choices[0].message.content.trim();
+    } catch (error) {
+        console.error('   ❌ Error en respuesta general:', error.message);
+        return "Hola, soy Acompaña. Mi función es ayudarte a consultar datos sobre salud mental. ¿En qué te puedo ayudar?";
+    }
+}
 
-PREGUNTA DEL USUARIO: {userQuestion}
 
-Responde ÚNICAMENTE con el SQL, sin explicaciones ni formato markdown.`;
+// --- LÓGICA PRINCIPAL DEL CHATBOT ---
 
-// Funciones de detección
 function isDataQuery(message) {
-  console.log("Se ha considerado DataQuery...")
-  const lowerMsg = message.toLowerCase();
-  
-  const dataKeywords = [
-    'cuántos', 'cuántas', 'cuantos', 'cuantas', 'número', 'numero', 'cantidad',
-    'estadística', 'estadísticas', 'estadistica', 'estadisticas', 'dato', 'datos',
-    'casos', 'incidencia', 'prevalencia', 'total',
-    'andalucía', 'andalucia', 'madrid', 'cataluña', 'cataluna', 'valencia', 
-    'galicia', 'país vasco', 'pais vasco', 'castilla', 'navarra', 'aragón', 'aragon',
-    'extremadura', 'murcia', 'baleares', 'canarias', 'rioja', 'asturias', 'cantabria',
-    'esquizofrenia', 'depresión', 'depresion', 'ansiedad', 'trastorno bipolar',
-    'trastorno obsesivo', 'tdah', 'psicosis', 'demencia', 'alzheimer',
-    'trastorno alimenticio', 'bulimia', 'anorexia', 'autismo', 'asperger',
-    'enfermedad mental', 'salud mental', 'diagnóstico', 'diagnostico',
-  ];
-
-  return dataKeywords.some(keyword => lowerMsg.includes(keyword));
+    const lowerMessage = message.toLowerCase();
+    const keywords = [
+        // Palabras de consulta
+        'dato', 'cuántos', 'cuántas', 'número', 'casos', 'estadística', 'incidencia',
+        'prevalencia', 'total', 'dime', 'muéstrame', 'cuál es', 'cuáles son', 'porcentaje',
+        // Sujetos
+        'región', 'enfermedad', 'diagnóstico', 'comunidad', 'ciudad',
+        // Comunidades Autónomas
+        'andalucía', 'aragón', 'asturias', 'baleares', 'canarias', 'cantabria',
+        'castilla y león', 'castilla-la mancha', 'cataluña', 'comunidad valenciana',
+        'extremadura', 'galicia', 'madrid', 'murcia', 'navarra', 'país vasco', 'la rioja',
+        // Enfermedades comunes
+        'depresión', 'ansiedad', 'esquizofrenia', 'bipolar', 'toc', 'tdah', 'psicosis', 'alimenticio'
+    ];
+    return keywords.some(k => lowerMessage.includes(k));
 }
 
 function isUrgentQuery(message) {
-  const urgentWords = [
-    'suicidio', 'suicidarme', 'matarme', 'acabar con mi vida',
-    'crisis', 'urgencia', 'emergencia', 'desesperado', 'ayuda inmediata'
-  ];
-  return urgentWords.some(word => message.toLowerCase().includes(word));
+    const lowerMessage = message.toLowerCase();
+    const keywords = [
+        'suicidio', 'matarme', 'acabar con todo', 'no quiero vivir', 'crisis',
+        'urgencia', 'emergencia', 'desesperado', 'ayuda inmediata'
+    ];
+    return keywords.some(k => lowerMessage.includes(k));
 }
 
-// Función de generación SQL con OpenAI
-async function generateSQL(userQuestion) {
-  if (!AI_PROVIDERS.openai.enabled) {
-    throw new Error("OpenAI no está configurado");
-  }
-
-  try {
-    const prompt = SQL_GENERATION_PROMPT.replace('{userQuestion}', userQuestion);
-    
-    console.log('   🤖 Solicitando generación de SQL a OpenAI...');
-    
-    const completion = await AI_PROVIDERS.openai.client.chat.completions.create({
-      model: AI_PROVIDERS.openai.model,
-      messages: [
-        { role: "system", content: "Eres un experto en SQL para Oracle. Genera SOLO el SQL sin explicaciones." },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 300
-    });
-
-    let sql = completion.choices[0].message.content.trim();
-    
-    // Limpiar el SQL
-    sql = sql.replace(/```sql/g, '').replace(/```/g, '').trim();
-    sql = sql.replace(/;$/g, '');
-    
-    console.log('   ✅ SQL Generado:\n', sql);
-    return sql;
-    
-  } catch (error) {
-    console.error('   ❌ Error de OpenAI:', error.message);
-    
-    // SQL de respaldo
-    const backupSQL = getBackupSQL(userQuestion);
-    if (backupSQL) {
-      console.log('   🔄 Usando SQL de respaldo:', backupSQL);
-      return backupSQL;
-    }
-    throw new Error("No pude generar la consulta SQL");
-  }
-}
-
-// SQLs de respaldo
-function getBackupSQL(question) {
-  const lowerQ = question.toLowerCase();
-  
-  
-  if (lowerQ.includes('esquizofrenia') && lowerQ.includes('andalucía')) {
-    return "SELECT * FROM VISTA_MUY_INTERESANTE;";
-  }
-  if (lowerQ.includes('depresión') && lowerQ.includes('madrid')) {
-    return "SELECT region, enfermedad, num_casos FROM VISTA_MUY_INTERESANTE WHERE region LIKE '%Madrid%' AND enfermedad LIKE '%depresión%'";
-  }
-  if (lowerQ.includes('ansiedad')) {
-    return "SELECT region, enfermedad, num_casos FROM VISTA_MUY_INTERESANTE WHERE enfermedad LIKE '%ansiedad%' ORDER BY num_casos DESC";
-  }
-  if (lowerQ.includes('esquizofrenia')) {
-    return "SELECT region, enfermedad, num_casos FROM VISTA_MUY_INTERESANTE WHERE enfermedad LIKE '%esquizofrenia%' ORDER BY num_casos DESC";
-  }
-  
-  return null;
-}
-
-// Función principal de procesamiento
 async function processChatMessage(message) {
-  const isUrgent = isUrgentQuery(message);
-  const isData = isDataQuery(message);
-  
-  let reply;
-  let usedData = false;
-
-  console.log('\n' + '═'.repeat(70));
-  console.log(`🧠 PROCESANDO: "${message}"`);
-  console.log(`📊 Detección de datos: ${isData ? '✅ SÍ' : '❌ NO'}`);
-  console.log(`🚨 Detección de urgencia: ${isUrgent ? '✅ SÍ' : '❌ NO'}`);
-
-  // FLUJO AGENTIC
-  if (isData && Database.pool && AI_PROVIDERS.openai.enabled) {
-    try {
-      console.log('🔍 Iniciando flujo agentic con OpenAI...');
-      
-      const generatedSQL = await generateSQL(message);
-      
-      console.log('   🗄️ Ejecutando consulta en Oracle...');
-      const queryResults = await Database.executeQuery(generatedSQL);
-      usedData = queryResults && queryResults.length > 0;
-      
-      if (usedData) {
-        console.log(`   📊 Obtenidos ${queryResults.length} registros`);
-        
-        reply = `💙 Según los datos del sistema de salud mental:\n\n`;
-        
-        //queryResults.forEach((row, index) => {
-        //  reply += `• **(${row.DIAGNOSTICO_PRINCIPAL}, ${row.CATEGORIA}, ${row.FRECUENCIA}, ${row.HOSPITALES_QUE_REPORTAN}, ...)**\n`;
-        //});
-        
-        reply += `\nEstos datos representan la situación actual en el sistema de salud público.`;
-        console.log(queryResults);
-      } else {
-        reply = "💙 No se encontraron datos específicos para tu consulta en la base de datos.";
-      }
-      
-    } catch (sqlError) {
-      console.error('❌ Error en flujo agentic:', sqlError.message);
-      reply = "💙 Tuve problemas técnicos para consultar los datos. Por favor, intenta con una pregunta más específica.";
+    console.log('\n' + '═'.repeat(70));
+    console.log(`🧠 Procesando: "${message}"`);
+    
+    if (isUrgentQuery(message)) {
+        console.log("   🚨 ¡URGENCIA DETECTADA!");
+        return "Veo que estás pasando por un momento muy difícil. Por favor, busca ayuda profesional de inmediato. Puedes llamar al 024 (Línea de atención a la conducta suicida) o al 112 (Emergencias). Hay personas dispuestas a ayudarte ahora mismo.";
     }
-  } 
-  else if (isUrgent) {
-    reply = `🚨 **URGENCIA**\n💙 Veo que estás pasando por un momento difícil.\n\n🔴 **AYUDA INMEDIATA**:\n• Teléfono 024: Atención Conducta Suicida (24/7)\n• Teléfono de la Esperanza: 717 003 717\n• Emergencias: 112\n\nNo estás solo/a. Hay ayuda disponible.`;
-  } 
-  else {
-    if (isData && !AI_PROVIDERS.openai.enabled) {
-      reply = "💙 Detecté que quieres datos, pero la IA no está disponible. Configura OPENAI_API_KEY en .env para consultas dinámicas.";
-    } else if (isData && !Database.pool) {
-      reply = "💙 Detecté que quieres datos, pero la base de datos no está conectada.";
-    } else {
-      reply = "💙 Hola, soy Acompaña. Puedo ayudarte con consultas sobre datos de salud mental en España. Por ejemplo: '¿Cuántos casos de depresión hay en Madrid?'";
-    }
-  }
 
-  // Guardar en BD
-  if (Database.pool) {
-    try {
-      await Database.executeQuery(`
-        BEGIN
-          EXECUTE IMMEDIATE 'CREATE TABLE chat_conversations (
-            id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-            user_message VARCHAR2(4000),
-            assistant_response VARCHAR2(4000),
-            is_urgent NUMBER(1) DEFAULT 0,
-            used_data NUMBER(1) DEFAULT 0,
-            created_at DATE DEFAULT SYSDATE
-          )';
-        EXCEPTION
-          WHEN OTHERS THEN NULL;
-        END;
-      `);
-      
-      await Database.executeQuery(
-        `INSERT INTO chat_conversations (user_message, assistant_response, is_urgent, used_data) 
-         VALUES (:userMessage, :assistantResponse, :isUrgent, :usedData)`,
-        {
-          userMessage: message.substring(0, 4000),
-          assistantResponse: reply.substring(0, 4000),
-          isUrgent: isUrgent ? 1 : 0,
-          usedData: usedData ? 1 : 0
+    if (isDataQuery(message)) {
+        console.log("   📊 Es una consulta de datos.");
+        try {
+            // Flujo Agentic Completo
+            const sqlQuery = await generateSQL(message);
+            const dbResults = await Database.executeQuery(sqlQuery);
+            const finalReply = await interpretResults(dbResults, message);
+            return finalReply;
+        } catch (error) {
+            console.error('❌ Error en el flujo de datos:', error.message);
+            return `Lo siento, ha ocurrido un error técnico al procesar tu consulta de datos: ${error.message}`;
         }
-      );
-      console.log('   💾 Conversación guardada en BD');
-    } catch (dbError) {
-      console.log('   💾 Error al guardar en BD');
+    } else {
+        // Respuesta general para preguntas que no son de datos
+        return await generateGeneralResponse(message);
     }
-  }
-
-  return {
-    reply,
-    isUrgent,
-    usedData,
-    provider: AI_PROVIDERS.openai.enabled ? "OpenAI GPT" : "Sistema Básico"
-  };
 }
 
-// Interfaz de terminal
-function createChatInterface() {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
+// --- INTERFAZ DE TERMINAL ---
+async function startChat() {
+    await Database.initialize();
+    if (!Database.isConnected) {
+        console.error("❌ No se pudo iniciar el chatbot porque la conexión a la base de datos falló.");
+        return;
+    }
+     if (!process.env.OPENAI_API_KEY) {
+        console.error("❌ Falta la variable de entorno OPENAI_API_KEY. El chatbot no puede funcionar sin ella.");
+        return;
+    }
 
-  console.clear();
-  console.log('🚀 ' + '═'.repeat(60));
-  console.log('   🤖 ACOMPAÑA - Chatbot con OpenAI');
-  console.log('═'.repeat(60));
-  
-  console.log('\n💚 **CARACTERÍSTICAS**:');
-  console.log('   • ✅ Generación de SQL con OpenAI');
-  console.log('   • ✅ SQL de respaldo para preguntas comunes');
-  console.log('   • ✅ Conexión a Oracle Database');
-  console.log('   • ✅ Manejo robusto de errores');
-  
-  console.log('\n🔧 **ESTADO ACTUAL**:');
-  console.log(`   • Base de datos: ${Database.pool ? '✅ CONECTADA' : '❌ NO CONECTADA'}`);
-  console.log(`   • IA OpenAI: ${AI_PROVIDERS.openai.enabled ? '✅ CONFIGURADA' : '❌ NO CONFIGURADA'}`);
-  
-  console.log('\n' + '─'.repeat(70));
-  console.log('Escribe tu mensaje (o "salir" para terminar):');
-
-  function askQuestion() {
-    rl.question('\n👤 Tú: ', async (input) => {
-      if (input.toLowerCase() === 'salir') {
-        console.log('\n💙 Hasta pronto. Recuerda: No estás solo/a.');
-        rl.close();
-        if (Database.pool) await Database.close();
-        process.exit(0);
-      }
-
-      if (input.trim() === '') {
-        console.log('💙 Por favor, escribe tu mensaje.');
-        return askQuestion();
-      }
-
-      try {
-        const startTime = Date.now();
-        const response = await processChatMessage(input);
-        const processingTime = Date.now() - startTime;
-
-        console.log(`\n🤖 Acompaña:`);
-        console.log('─'.repeat(50));
-        console.log(response.reply);
-        console.log('─'.repeat(50));
-        console.log(`📊 ${response.usedData ? '✅ CONSULTA CON DATOS' : '💬 RESPUESTA GENERAL'}`);
-        console.log(`🤖 ${response.provider} | ⏱️ ${processingTime}ms`);
-        if (response.isUrgent) console.log('🚨 **URGENCIA DETECTADA**');
-        console.log('─'.repeat(50));
-
-      } catch (error) {
-        console.log('\n❌ Error:', error.message);
-      }
-
-      askQuestion();
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
     });
-  }
 
-  return askQuestion;
+    console.clear();
+    console.log('🚀 ' + '═'.repeat(60));
+    console.log('   🤖 Chatbot "Acompaña" Iniciado');
+    console.log('   ✅ Conectado a Oracle y OpenAI.');
+    console.log('   Escribe tu consulta o "salir" para terminar.');
+    console.log('═'.repeat(60));
+
+    rl.setPrompt('\n👤 Tú: ');
+    rl.prompt();
+
+    rl.on('line', async (line) => {
+        if (line.toLowerCase() === 'salir') {
+            rl.close();
+            return;
+        }
+
+        // Añadir un indicador de que está "pensando"
+        const loadingIndicator = setInterval(() => process.stdout.write('.'), 200);
+        
+        const response = await processChatMessage(line);
+        
+        clearInterval(loadingIndicator);
+        process.stdout.clearLine(0);
+        process.stdout.cursorTo(0);
+
+        console.log(`\n🤖 Acompaña: ${response}`);
+        rl.prompt();
+
+    }).on('close', async () => {
+        await Database.close();
+        console.log('\n💙 ¡Hasta pronto! Cuídate.');
+        process.exit(0);
+    });
 }
 
-// Inicialización
-async function startChatbot() {
-  try {
-    console.log('🔧 Inicializando sistema con OpenAI...');
-    
-    const dbInitialized = await Database.initialize();
-    
-    console.log(`\n📊 ESTADO FINAL:`);
-    console.log(`   🗄️  Base de datos: ${dbInitialized ? '✅ CONECTADA' : '❌ NO CONECTADA'}`);
-    console.log(`   🤖 IA OpenAI: ${AI_PROVIDERS.openai.enabled ? '✅ CONFIGURADA' : '❌ NO CONFIGURADA'}`);
-    
-    if (!AI_PROVIDERS.openai.enabled) {
-      console.log('\n⚠️  Para IA: Configura OPENAI_API_KEY en .env');
-      console.log('   📧 Obtén una key en: https://platform.openai.com/api-keys');
-    }
-    
-    console.log('\n🎯 SISTEMA LISTO');
+startChat();
 
-    const startChat = createChatInterface();
-    startChat();
-
-  } catch (error) {
-    console.error('❌ Error al iniciar:', error);
-    process.exit(1);
-  }
-}
-
-// Manejo de cierre
-process.on('SIGINT', async () => {
-  console.log('\n💙 Cerrando chatbot...');
-  if (Database.pool) await Database.close();
-  process.exit(0);
-});
-
-// Ejecutar
-startChatbot();
