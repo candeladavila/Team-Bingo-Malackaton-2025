@@ -1,5 +1,7 @@
 import React from 'react'
 import './AboutPage.css'
+import ListenButton from '../components/ListenButton'  // 👈 Importa el botón
+
 
 const AboutPage = () => {
   // Placeholder for four team members displayed as circular icons
@@ -10,6 +12,7 @@ const AboutPage = () => {
 
   return (
     <div className="about-page">
+      <ListenButton />  {/* 👈 Añade el botón aquí */}
       <header className="page-header">
         <h1>Sobre Nosotros</h1>
         <p>Conoce al equipo detrás de esta plataforma de análisis de datos</p>

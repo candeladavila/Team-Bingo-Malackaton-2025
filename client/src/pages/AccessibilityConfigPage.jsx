@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAccessibility } from '../context/AccessibilityContext';
 import './AccessibilityConfigPage.css';
+import ListenButton from '../components/ListenButton';  // 👈 Importa el botón
 
 const AccessibilityConfigPage = () => {
   const {
@@ -76,11 +77,12 @@ const AccessibilityConfigPage = () => {
 
   return (
     <div className="accessibility-config-page">
+      <ListenButton />  {/* 👈 Añade el botón aquí */}
       <header className="page-header">
         <h1>Configuración de Accesibilidad</h1>
         <p>{t('subtitle')}</p>
       </header>
-
+      
       <section className="config-sections">
         {/* Configuración de idioma */}
         <div className="config-section">

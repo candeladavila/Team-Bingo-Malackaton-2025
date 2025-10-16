@@ -69,8 +69,7 @@ coverage/
 # TypeScript
 *.tsbuildinfo
 
-# --- Environment files ---
-.env
+
 .env.*
 !.env.example
 !.env.*.example
@@ -114,6 +113,5 @@ temp/
 
 # En server/.gitignore
 config/credentials.json
-*.env
 
 # Ignorar wallet
