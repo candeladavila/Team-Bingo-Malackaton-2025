@@ -23,7 +23,7 @@ ChartJS.register(
 )
 
 const DataVisualizationPage = () => {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001'
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://insight-server-rose.vercel.app'
   const [chartType, setChartType] = useState('pyramid')
   const [selectedDiagnosis, setSelectedDiagnosis] = useState('')
   const [diagnoses, setDiagnoses] = useState([])
