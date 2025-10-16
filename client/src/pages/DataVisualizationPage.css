@@ -351,7 +351,7 @@
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
+[data-theme='dark'] {
   .data-visualization-page {
     background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
   }

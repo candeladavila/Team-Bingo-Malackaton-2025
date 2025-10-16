@@ -238,6 +238,7 @@ const DataVisualizationPage = () => {
   }
 
   const getChartOptions = () => {
+    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
     const baseOptions = {
       responsive: true,
       maintainAspectRatio: false,
@@ -245,7 +246,7 @@ const DataVisualizationPage = () => {
         legend: {
           position: 'top',
           labels: {
-            color: '#333',
+            color: isDarkMode ? '#ffffff' : '#333',
             font: {
               size: 12,
               weight: 'bold'
@@ -255,7 +256,7 @@ const DataVisualizationPage = () => {
         title: {
           display: true,
           text: getChartTitle(),
-          color: '#333',
+          color: isDarkMode ? '#ffffff' : '#333',
           font: {
             size: 16,
             weight: 'bold'
@@ -265,18 +266,18 @@ const DataVisualizationPage = () => {
       scales: {
         x: {
           ticks: {
-            color: '#666'
+            color: isDarkMode ? '#e0e0e0' : '#666'
           },
           grid: {
-            color: 'rgba(0,0,0,0.1)'
+            color: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
           }
         },
         y: {
           ticks: {
-            color: '#666'
+            color: isDarkMode ? '#e0e0e0' : '#666'
           },
           grid: {
-            color: 'rgba(0,0,0,0.1)'
+            color: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
           }
         }
       }

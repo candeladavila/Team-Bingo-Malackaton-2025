@@ -91,9 +91,9 @@ export const AccessibilityProvider = ({ children }) => {
   // Efecto para aplicar tema oscuro
   useEffect(() => {
     if (darkMode) {
-      document.documentElement.classList.add('dark-mode');
+      document.documentElement.setAttribute('data-theme', 'dark');
     } else {
-      document.documentElement.classList.remove('dark-mode');
+      document.documentElement.removeAttribute('data-theme');
     }
   }, [darkMode]);
 

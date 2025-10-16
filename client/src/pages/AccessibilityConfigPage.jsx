@@ -46,7 +46,7 @@ const AccessibilityConfigPage = () => {
     setLanguage('es');  // El idioma al final para asegurar que las traducciones se actualicen correctamente
     
     // Forzamos la actualización del documento
-    document.documentElement.classList.remove('dark-mode');
+    document.documentElement.removeAttribute('data-theme');
     document.documentElement.style.fontSize = '16px';
   };
 

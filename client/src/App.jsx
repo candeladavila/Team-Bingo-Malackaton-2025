@@ -12,6 +12,7 @@ import {
 } from './pages'
 import './App.css'
 import './styles/pages.css'
+import './styles/darkMode.css'
 
 function App() {
   return (
