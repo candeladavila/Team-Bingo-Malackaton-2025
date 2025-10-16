@@ -32,7 +32,17 @@
   padding: 20px;
   margin: 0;
   overflow-x: hidden;
+  position: relative;
+  z-index: 1;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+[data-theme='dark'] .tools-page,
+[data-theme='dark'] .data-filtering-page,
+[data-theme='dark'] .data-visualization-page,
+[data-theme='dark'] .about-page,
+[data-theme='dark'] .accessibility-config-page {
+  background: transparent;
 }
 
 /* Page headers */
@@ -253,17 +263,49 @@
   }
 }
 
-/* Modo oscuro global */
+/* Modo oscuro global con círculos pequeños */
 [data-theme='dark'] .App {
   background-color: #000000;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme='dark'] .App::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 15% 15%, rgba(102, 126, 234, 0.15) 0%, transparent 15%),
+    radial-gradient(circle at 85% 25%, rgba(118, 75, 162, 0.15) 0%, transparent 15%),
+    radial-gradient(circle at 75% 45%, rgba(168, 85, 247, 0.12) 0%, transparent 12%),
+    radial-gradient(circle at 25% 35%, rgba(102, 126, 234, 0.12) 0%, transparent 12%),
+    radial-gradient(circle at 45% 65%, rgba(118, 75, 162, 0.15) 0%, transparent 15%),
+    radial-gradient(circle at 85% 75%, rgba(168, 85, 247, 0.12) 0%, transparent 12%),
+    radial-gradient(circle at 15% 85%, rgba(102, 126, 234, 0.15) 0%, transparent 15%),
+    radial-gradient(circle at 65% 90%, rgba(118, 75, 162, 0.12) 0%, transparent 12%);
+  background-color: #000000;
+  z-index: -1;
+  pointer-events: none;
+}
+
+[data-theme='dark'] .App > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Contenedores de fondo blanco a negro */
 [data-theme='dark'] .feature-card,
 [data-theme='dark'] .config-section,
-[data-theme='dark'] .keyboard-shortcuts-dropdown {
+[data-theme='dark'] .keyboard-shortcuts-dropdown,
+[data-theme='dark'] .tool-card,
+[data-theme='dark'] .white-rectangle {
   background: #000000;
   border-color: rgba(168, 85, 247, 0.4);
+  position: relative;
+  z-index: 2;
 }
 
 /* Todo el texto dentro de contenedores negros */
