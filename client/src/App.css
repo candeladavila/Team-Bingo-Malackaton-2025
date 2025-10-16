@@ -24,7 +24,6 @@
 .tools-page,
 .data-filtering-page,
 .data-visualization-page,
-.chatbot-page,
 .about-page,
 .accessibility-config-page {
   width: 100%;
@@ -168,7 +167,6 @@
   .tools-page,
   .data-filtering-page,
   .data-visualization-page,
-  .chatbot-page,
   .about-page,
   .accessibility-config-page {
     padding: 15px;
@@ -189,7 +187,6 @@
   .tools-page,
   .data-filtering-page,
   .data-visualization-page,
-  .chatbot-page,
   .about-page,
   .accessibility-config-page {
     min-height: calc(100vh - 60px);

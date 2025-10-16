@@ -42,7 +42,9 @@ const Navbar = () => {
         {/* Logo/Nombre de la web */}
         <div className="navbar-brand">
           <Link to="/" className="brand-button">
-            <span className="brand-icon">💡</span>
+            <span className="brand-icon">
+              <img src="/logo_sin_fondo.png" alt="Insight logo" />
+            </span>
             <span className="brand-text">Insight</span>
           </Link>
         </div>
@@ -53,7 +55,7 @@ const Navbar = () => {
           <div className="navbar-item dropdown" ref={dropdownRef}>
             <button 
               className={`dropdown-toggle ${
-                ['/tools', '/data-filtering', '/data-visualization', '/chatbot'].some(path => 
+                ['/tools', '/data-filtering', '/data-visualization'].some(path => 
                   isActive(path)
                 ) ? 'active' : ''
               }`}
@@ -93,14 +95,7 @@ const Navbar = () => {
                   <span className="item-icon">📊</span>
                   Representación Gráfica
                 </Link>
-                <Link 
-                  to="/chatbot"
-                  className={`dropdown-item ${isActive('/chatbot') ? 'active' : ''}`}
-                  onClick={closeDropdown}
-                >
-                  <span className="item-icon">🤖</span>
-                  Chatbot
-                </Link>
+                {/* Chatbot removed */}
               </div>
             )}
           </div>

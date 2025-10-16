@@ -39,7 +39,7 @@ class VisualizationService:
     
     def get_age_pyramid_data(self, diagnosis: str) -> List[Dict[str, Any]]:
         """
-        Obtiene datos para pirámide poblacional filtrada por diagnóstico usando años de nacimiento
+        Obtiene datos para pirámide poblacional filtrada por diagnóstico usando intervalos de edad
         Devuelve lista de objetos con formato: {intervalo: str, hombres: int, mujeres: int}
         """
         connection = None
@@ -47,19 +47,19 @@ class VisualizationService:
             connection = self.get_connection()
             cursor = connection.cursor()
             
-            # Definir intervalos de años de nacimiento desde 1926 hasta 2000 (cada 10 años)
-            birth_year_groups = ['1926-1929', '1930-1939', '1940-1949', '1950-1959', '1960-1969', '1970-1979', '1980-1989', '1990-1999', '2000+']
+            # Definir intervalos de edad (cada 10 años)
+            age_groups = ['0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+']
             
-            # Query combinada para obtener datos por sexo y grupo de nacimiento
+            # Query combinada para obtener datos por sexo y grupo de edad
             # Usamos NOMBRE y CENTRO_RECODIFICADO para identificar pacientes únicos
             query = """
-            WITH birth_years AS (
+            WITH age_calculations AS (
                 SELECT 
-                    CASE 
+                    2024 - (CASE 
                         WHEN EXTRACT(YEAR FROM TO_DATE(FECHA_DE_NACIMIENTO, 'MM/DD/YY')) > 2025 
                         THEN EXTRACT(YEAR FROM TO_DATE(FECHA_DE_NACIMIENTO, 'MM/DD/YY')) - 100
                         ELSE EXTRACT(YEAR FROM TO_DATE(FECHA_DE_NACIMIENTO, 'MM/DD/YY'))
-                    END as birth_year,
+                    END) as age,
                     SEXO,
                     NOMBRE,
                     CENTRO_RECODIFICADO
@@ -73,45 +73,46 @@ class VisualizationService:
             grouped_data AS (
                 SELECT 
                     CASE 
-                        WHEN birth_year BETWEEN 1926 AND 1929 THEN '1926-1929'
-                        WHEN birth_year BETWEEN 1930 AND 1939 THEN '1930-1939'
-                        WHEN birth_year BETWEEN 1940 AND 1949 THEN '1940-1949'
-                        WHEN birth_year BETWEEN 1950 AND 1959 THEN '1950-1959'
-                        WHEN birth_year BETWEEN 1960 AND 1969 THEN '1960-1969'
-                        WHEN birth_year BETWEEN 1970 AND 1979 THEN '1970-1979'
-                        WHEN birth_year BETWEEN 1980 AND 1989 THEN '1980-1989'
-                        WHEN birth_year BETWEEN 1990 AND 1999 THEN '1990-1999'
-                        ELSE '2000+'
-                    END as grupo_nacimiento,
+                        WHEN age BETWEEN 0 AND 9 THEN '0-9'
+                        WHEN age BETWEEN 10 AND 19 THEN '10-19'
+                        WHEN age BETWEEN 20 AND 29 THEN '20-29'
+                        WHEN age BETWEEN 30 AND 39 THEN '30-39'
+                        WHEN age BETWEEN 40 AND 49 THEN '40-49'
+                        WHEN age BETWEEN 50 AND 59 THEN '50-59'
+                        WHEN age BETWEEN 60 AND 69 THEN '60-69'
+                        WHEN age BETWEEN 70 AND 79 THEN '70-79'
+                        ELSE '80+'
+                    END as grupo_edad,
                     SEXO,
                     COUNT(DISTINCT NOMBRE || '_' || CENTRO_RECODIFICADO) as count
-                FROM birth_years
+                FROM age_calculations
+                WHERE age >= 0
                 GROUP BY 
                     CASE 
-                        WHEN birth_year BETWEEN 1926 AND 1929 THEN '1926-1929'
-                        WHEN birth_year BETWEEN 1930 AND 1939 THEN '1930-1939'
-                        WHEN birth_year BETWEEN 1940 AND 1949 THEN '1940-1949'
-                        WHEN birth_year BETWEEN 1950 AND 1959 THEN '1950-1959'
-                        WHEN birth_year BETWEEN 1960 AND 1969 THEN '1960-1969'
-                        WHEN birth_year BETWEEN 1970 AND 1979 THEN '1970-1979'
-                        WHEN birth_year BETWEEN 1980 AND 1989 THEN '1980-1989'
-                        WHEN birth_year BETWEEN 1990 AND 1999 THEN '1990-1999'
-                        ELSE '2000+'
+                        WHEN age BETWEEN 0 AND 9 THEN '0-9'
+                        WHEN age BETWEEN 10 AND 19 THEN '10-19'
+                        WHEN age BETWEEN 20 AND 29 THEN '20-29'
+                        WHEN age BETWEEN 30 AND 39 THEN '30-39'
+                        WHEN age BETWEEN 40 AND 49 THEN '40-49'
+                        WHEN age BETWEEN 50 AND 59 THEN '50-59'
+                        WHEN age BETWEEN 60 AND 69 THEN '60-69'
+                        WHEN age BETWEEN 70 AND 79 THEN '70-79'
+                        ELSE '80+'
                     END,
                     SEXO
             )
-            SELECT grupo_nacimiento, SEXO, count
+            SELECT grupo_edad, SEXO, count
             FROM grouped_data
             ORDER BY 
-                CASE grupo_nacimiento
-                    WHEN '1926-1929' THEN 1
-                    WHEN '1930-1939' THEN 2
-                    WHEN '1940-1949' THEN 3
-                    WHEN '1950-1959' THEN 4
-                    WHEN '1960-1969' THEN 5
-                    WHEN '1970-1979' THEN 6
-                    WHEN '1980-1989' THEN 7
-                    WHEN '1990-1999' THEN 8
+                CASE grupo_edad
+                    WHEN '0-9' THEN 1
+                    WHEN '10-19' THEN 2
+                    WHEN '20-29' THEN 3
+                    WHEN '30-39' THEN 4
+                    WHEN '40-49' THEN 5
+                    WHEN '50-59' THEN 6
+                    WHEN '60-69' THEN 7
+                    WHEN '70-79' THEN 8
                     ELSE 9
                 END
             """
@@ -123,20 +124,20 @@ class VisualizationService:
             data_by_interval = {}
             
             # Inicializar todos los intervalos con 0 hombres y 0 mujeres
-            for interval in birth_year_groups:
+            for interval in age_groups:
                 data_by_interval[interval] = {"hombres": 0, "mujeres": 0}
             
             # Procesar resultados de la consulta
-            for grupo_nacimiento, sexo, count in results:
-                if grupo_nacimiento in data_by_interval:
+            for grupo_edad, sexo, count in results:
+                if grupo_edad in data_by_interval:
                     if sexo == '1':  # Hombre
-                        data_by_interval[grupo_nacimiento]["hombres"] = count
+                        data_by_interval[grupo_edad]["hombres"] = count
                     elif sexo == '2':  # Mujer
-                        data_by_interval[grupo_nacimiento]["mujeres"] = count
+                        data_by_interval[grupo_edad]["mujeres"] = count
             
             # Convertir a lista de objetos con el formato solicitado
             result_list = []
-            for interval in birth_year_groups:
+            for interval in age_groups:
                 result_list.append({
                     "intervalo": interval,
                     "hombres": data_by_interval[interval]["hombres"],
@@ -332,6 +333,53 @@ class VisualizationService:
             
         except Exception as e:
             print(f"Error en get_gender_distribution_data: {str(e)}")
+            raise e
+        finally:
+            if connection:
+                connection.close()
+    
+    def get_pie_chart_data(self, diagnosis: str) -> Dict[str, int]:
+        """
+        Obtiene datos para diagrama de sectores por sexo
+        Devuelve formato: {"Hombres": int, "Mujeres": int}
+        """
+        connection = None
+        try:
+            connection = self.get_connection()
+            cursor = connection.cursor()
+            
+            query = """
+            SELECT 
+                SEXO,
+                COUNT(DISTINCT NOMBRE || '_' || CENTRO_RECODIFICADO) as count
+            FROM DATOS_ORIGINALES 
+            WHERE CATEGORIA = :diagnosis
+            AND SEXO IN ('1', '2')
+            AND NOMBRE IS NOT NULL
+            AND CENTRO_RECODIFICADO IS NOT NULL
+            GROUP BY SEXO
+            """
+            
+            cursor.execute(query, {"diagnosis": diagnosis})
+            results = cursor.fetchall()
+            
+            # Inicializar diccionario con valores por defecto
+            pie_data = {
+                "Hombres": 0,
+                "Mujeres": 0
+            }
+            
+            # Procesar resultados
+            for sexo, count in results:
+                if sexo == '1':  # Hombre
+                    pie_data["Hombres"] = count
+                elif sexo == '2':  # Mujer
+                    pie_data["Mujeres"] = count
+            
+            return pie_data
+            
+        except Exception as e:
+            print(f"Error en get_pie_chart_data: {str(e)}")
             raise e
         finally:
             if connection:

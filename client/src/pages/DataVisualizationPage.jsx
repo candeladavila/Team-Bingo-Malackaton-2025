@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,7 +9,7 @@ import {
   Legend,
   ArcElement,
 } from 'chart.js'
-import { Bar } from 'react-chartjs-2'
+import { Bar, Pie } from 'react-chartjs-2'
 import './DataVisualizationPage.css'
 
 ChartJS.register(
@@ -28,6 +28,48 @@ const DataVisualizationPage = () => {
   const [diagnoses, setDiagnoses] = useState([])
   const [chartData, setChartData] = useState(null)
   const [loading, setLoading] = useState(false)
+
+  // Generate decorative background dots (positions and styles randomized)
+  const bgDots = useMemo(() => {
+    const dots = []
+    // Use only lilac/white tones (exclude pure pink) and avoid placing dots over bottom area where cards live
+    const colorsPool = [
+      'var(--page-bg-end)',
+      'rgba(255,255,255,0.22)',
+      'rgba(255,255,255,0.14)'
+    ]
+    for (let i = 0; i < 34; i++) {
+      // limit top to avoid lower 30% (where info cards usually are)
+      const topPercent = Math.random() * 68 // 0 - 68%
+      dots.push({
+        id: i,
+        top: topPercent,
+        left: Math.random() * 100,
+        size: 10 + Math.random() * 36,
+        delay: Math.random() * 6,
+        duration: 6 + Math.random() * 8,
+        color: colorsPool[Math.floor(Math.random() * colorsPool.length)]
+      })
+    }
+    return dots
+  }, [])
+
+  // Decorative leaf shapes (SVG paths) positioned around the page
+  const bgLeaves = useMemo(() => {
+    const leaves = []
+    const leafPositions = [
+      { top: 6, left: 6, rotate: -20, scale: 0.65 },
+      { top: 10, left: 86, rotate: 20, scale: 0.7 },
+      { top: 30, left: 6, rotate: -10, scale: 0.6 },
+      { top: 26, left: 92, rotate: 15, scale: 0.6 },
+      { top: 48, left: 10, rotate: -25, scale: 0.75 },
+      { top: 6, left: 50, rotate: 0, scale: 0.5 }
+    ]
+    leafPositions.forEach((pos, idx) => {
+      leaves.push({ id: idx, ...pos })
+    })
+    return leaves
+  }, [])
 
   // Paleta de colores acorde a tu web
   const colors = {
@@ -73,11 +115,8 @@ const DataVisualizationPage = () => {
         case 'pyramid':
           endpoint = `http://localhost:8001/api/visualization/age-pyramid?diagnosis=${encodeURIComponent(selectedDiagnosis)}`
           break
-        case 'histogram':
-          endpoint = `http://localhost:8001/api/visualization/age-histogram?diagnosis=${encodeURIComponent(selectedDiagnosis)}`
-          break
-        case 'gender-bar':
-          endpoint = `http://localhost:8001/api/visualization/gender-distribution?diagnosis=${encodeURIComponent(selectedDiagnosis)}`
+        case 'gender-pie':
+          endpoint = `http://localhost:8001/api/visualization/age-pyramid?diagnosis=${encodeURIComponent(selectedDiagnosis)}`
           break
         default:
           break
@@ -132,6 +171,8 @@ const DataVisualizationPage = () => {
         const maleData = data.map(item => -item.hombres) // Valores negativos para la izquierda
         const femaleData = data.map(item => item.mujeres)
         
+        console.log('PYRAMID - Processing', data.length, 'age intervals:', labels)
+        
         return {
           labels: labels,
           datasets: [
@@ -158,42 +199,36 @@ const DataVisualizationPage = () => {
           ]
         }
       
-      case 'histogram':
-        if (!data.age_groups || !data.counts) {
-          console.error('Missing required data for histogram chart:', data)
-          throw new Error('Datos incompletos para histograma')
+      case 'gender-pie':
+        // Calcular sumatorios de hombres y mujeres
+        if (!Array.isArray(data)) {
+          console.error('Expected array for pie chart:', data)
+          throw new Error('Formato de datos incorrecto para diagrama de sectores')
         }
-        return {
-          labels: data.age_groups,
+        
+        const totalMales = data.reduce((sum, item) => sum + item.hombres, 0)
+        const totalFemales = data.reduce((sum, item) => sum + item.mujeres, 0)
+        
+        console.log('PIE CHART - Total males:', totalMales, 'Total females:', totalFemales)
+        console.log('PIE CHART - Raw data received:', data)
+        
+        const pieData = {
+          labels: ['Hombres', 'Mujeres'],
           datasets: [
             {
-              label: 'Distribución de Edades',
-              data: data.counts,
-              backgroundColor: colors.background,
-              borderColor: colors.primary,
-              borderWidth: 2,
-              fill: true,
-            }
-          ]
-        }
-      
-      case 'gender-bar':
-        if (data.male_count === undefined || data.female_count === undefined) {
-          console.error('Missing required data for gender bar chart:', data)
-          throw new Error('Datos incompletos para distribución por sexo')
-        }
-        return {
-          labels: ['Masculino', 'Femenino'],
-          datasets: [
-            {
-              label: 'Número de Casos',
-              data: [data.male_count, data.female_count],
-              backgroundColor: [colors.male, colors.female],
+              data: [totalMales, totalFemales],
+              backgroundColor: [colors.maleLight, colors.femaleLight],
               borderColor: [colors.male, colors.female],
-              borderWidth: 1,
+              borderWidth: 2,
+              hoverBackgroundColor: [colors.male, colors.female],
+              hoverBorderColor: [colors.male, colors.female],
+              hoverBorderWidth: 3,
             }
           ]
         }
+        
+        console.log('PIE CHART - Final pie data:', pieData)
+        return pieData
       
       default:
         console.error('Unknown chart type:', type)
@@ -250,6 +285,18 @@ const DataVisualizationPage = () => {
       return {
         ...baseOptions,
         indexAxis: 'y',
+        plugins: {
+          ...baseOptions.plugins,
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.dataset.label || '';
+                const value = Math.abs(context.parsed.x); // Mostrar valor absoluto en tooltip
+                return `${label}: ${value} casos`;
+              }
+            }
+          }
+        },
         scales: {
           ...baseOptions.scales,
           x: {
@@ -265,6 +312,56 @@ const DataVisualizationPage = () => {
       }
     }
 
+    if (chartType === 'gender-pie') {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#333',
+              font: {
+                size: 16,
+                weight: 'bold'
+              },
+              padding: 20,
+              usePointStyle: true,
+              pointStyle: 'circle'
+            }
+          },
+          title: {
+            display: true,
+            text: getChartTitle(),
+            color: '#333',
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            padding: {
+              bottom: 30
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${label}: ${value} casos (${percentage}%)`;
+              }
+            }
+          }
+        },
+        layout: {
+          padding: {
+            bottom: 40
+          }
+        }
+      }
+    }
+
     return baseOptions
   }
 
@@ -272,9 +369,7 @@ const DataVisualizationPage = () => {
     switch (chartType) {
       case 'pyramid':
         return `Pirámide Poblacional - ${selectedDiagnosis}`
-      case 'histogram':
-        return `Distribución de Edades - ${selectedDiagnosis}`
-      case 'gender-bar':
+      case 'gender-pie':
         return `Distribución por Sexo - ${selectedDiagnosis}`
       default:
         return 'Gráfico'
@@ -283,6 +378,45 @@ const DataVisualizationPage = () => {
 
   return (
     <div className="data-visualization-page">
+      <div className="bg-dots" aria-hidden="true">
+        {bgDots.map(dot => (
+          <span
+            key={`dot-${dot.id}`}
+            className="bg-dot"
+            style={{
+              top: `${dot.top}%`,
+              left: `${dot.left}%`,
+              width: `${dot.size}px`,
+              height: `${dot.size}px`,
+              animationDelay: `${dot.delay}s`,
+              animationDuration: `${dot.duration}s`,
+              backgroundColor: dot.color
+            }}
+          />
+        ))}
+
+        {bgLeaves.map(leaf => (
+          <svg
+            key={`leaf-${leaf.id}`}
+            className="bg-leaf"
+            viewBox="0 0 64 64"
+            style={{
+              top: `${leaf.top}%`,
+              left: `${leaf.left}%`,
+              transform: `translate(-50%, -50%) rotate(${leaf.rotate}deg) scale(${leaf.scale})`
+            }}
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id={`lg-${leaf.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="var(--page-bg-end)" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="var(--page-bg-start)" stopOpacity="0.85" />
+              </linearGradient>
+            </defs>
+            <path fill={`url(#lg-${leaf.id})`} d="M32 4c6 0 20 8 24 18 4 10-6 24-18 30-12-6-22-20-18-30 4-10 12-18 12-18z" />
+          </svg>
+        ))}
+      </div>
       <header className="page-header">
         <h1>Representación de Datos</h1>
         <p>Visualiza datos médicos con gráficos interactivos especializados</p>
@@ -291,10 +425,12 @@ const DataVisualizationPage = () => {
       <section className="visualization-controls">
         <div className="control-group">
           <label>Tipo de Visualización:</label>
-          <select value={chartType} onChange={(e) => setChartType(e.target.value)}>
+          <select value={chartType} onChange={(e) => {
+            setChartType(e.target.value)
+            setChartData(null) // Limpiar datos anteriores al cambiar tipo
+          }}>
             <option value="pyramid">Pirámide Poblacional</option>
-            <option value="histogram">Histograma de Edades</option>
-            <option value="gender-bar">Distribución por Sexo</option>
+            <option value="gender-pie">Distribución por Sexo (Diagrama de Sectores)</option>
           </select>
         </div>
         
@@ -334,7 +470,11 @@ const DataVisualizationPage = () => {
               </div>
             ) : chartData ? (
               <div className="chart-wrapper">
-                <Bar data={chartData} options={getChartOptions()} />
+                {chartType === 'pyramid' ? (
+                  <Bar key={`pyramid-${selectedDiagnosis}`} data={chartData} options={getChartOptions()} />
+                ) : chartType === 'gender-pie' ? (
+                  <Pie key={`pie-${selectedDiagnosis}`} data={chartData} options={getChartOptions()} />
+                ) : null}
               </div>
             ) : (
               <div className="no-chart">
@@ -350,15 +490,11 @@ const DataVisualizationPage = () => {
         <div className="info-cards">
           <div className="info-card">
             <h4>Pirámide Poblacional</h4>
-            <p>Muestra la distribución por año de ingreso y sexo de pacientes con un diagnóstico específico. Los hombres aparecen en azul (lado izquierdo) y las mujeres en morado (lado derecho).</p>
-          </div>
-          <div className="info-card">
-            <h4>Histograma de Edades</h4>
-            <p>Representa la distribución normal de las edades de los pacientes filtrados por diagnóstico, mostrando la frecuencia de cada grupo etario.</p>
+            <p>Muestra la distribución por intervalos de edad y sexo de pacientes con un diagnóstico específico. Los hombres aparecen en azul (lado izquierdo) y las mujeres en morado (lado derecho).</p>
           </div>
           <div className="info-card">
             <h4>Distribución por Sexo</h4>
-            <p>Gráfico de barras que compara el número total de casos entre hombres y mujeres para el diagnóstico seleccionado.</p>
+            <p>Diagrama de sectores que muestra la proporción total de hombres y mujeres con un diagnóstico específico. Se calculan los sumatorios totales de cada género a partir de todos los intervalos de edad.</p>
           </div>
         </div>
       </section>

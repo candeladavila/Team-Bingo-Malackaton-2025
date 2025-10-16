@@ -148,6 +148,18 @@ async def get_gender_distribution(diagnosis: str = Query(..., description="Diagn
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al generar distribución por sexo: {str(e)}")
 
+@app.get("/api/visualization/pie-chart")
+async def get_pie_chart(diagnosis: str = Query(..., description="Diagnóstico para filtrar")):
+    """
+    Obtiene datos para diagrama de sectores por sexo
+    Devuelve formato: {"Hombres": int, "Mujeres": int}
+    """
+    try:
+        data = visualization_service.get_pie_chart_data(diagnosis)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar diagrama de sectores: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)

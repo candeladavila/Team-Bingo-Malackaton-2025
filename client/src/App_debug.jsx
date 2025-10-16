@@ -6,7 +6,6 @@ import {
   ToolsPage, 
   DataFilteringPage, 
   DataVisualizationPage, 
-  ChatbotPage, 
   AboutPage, 
   AccessibilityConfigPage 
 } from './pages'
@@ -26,7 +25,6 @@ function App() {
             <Route path="/tools" element={<ToolsPage />} />
             <Route path="/data-filtering" element={<DataFilteringPage />} />
             <Route path="/data-visualization" element={<DataVisualizationPage />} />
-            <Route path="/chatbot" element={<ChatbotPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/accessibility" element={<AccessibilityConfigPage />} />
           </Routes>
