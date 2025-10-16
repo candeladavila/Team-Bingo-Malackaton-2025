@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 
-export default function Chat() {
+export default function AgenticChat() {
   const [messages, setMessages] = useState(() => {
-    const saved = sessionStorage.getItem("mental-health-chat-history");
+    const saved = sessionStorage.getItem("agentic-chat-history");
     return saved ? JSON.parse(saved) : [
       { 
         role: "assistant", 
-        content: "Hola, soy Acompaña 💚. Estoy aquí para escucharte y orientarte sobre salud mental en España. ¿En qué puedo ayudarte hoy?",
+        content: "Hola, soy Acompaña 💚. Usando inteligencia artificial, puedo consultar datos reales de salud mental en España y explicártelos de forma comprensible. ¿En qué puedo ayudarte?",
         timestamp: new Date().toISOString()
       }
     ];
@@ -14,24 +14,26 @@ export default function Chat() {
   
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [connectionError, setConnectionError] = useState(false);
+  const [systemInfo, setSystemInfo] = useState(null);
   const endRef = useRef();
 
-  // Guardar historial en sessionStorage
+  // Cargar información del sistema al inicio
   useEffect(() => {
-    sessionStorage.setItem("mental-health-chat-history", JSON.stringify(messages));
+    fetch('/api/health')
+      .then(res => res.json())
+      .then(data => setSystemInfo(data))
+      .catch(console.error);
+  }, []);
+
+  // Guardar historial
+  useEffect(() => {
+    sessionStorage.setItem("agentic-chat-history", JSON.stringify(messages));
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  // Efecto para scroll automático
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
 
   async function sendMessage(e) {
     e?.preventDefault();
     const trimmedInput = input.trim();
-    
     if (!trimmedInput || loading) return;
 
     const userMsg = { 
@@ -43,7 +45,6 @@ export default function Chat() {
     setMessages(prev => [...prev, userMsg]);
     setInput("");
     setLoading(true);
-    setConnectionError(false);
 
     try {
       const res = await fetch("/api/chat", {
@@ -51,30 +52,30 @@ export default function Chat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           message: trimmedInput, 
-          history: messages.slice(-8) 
+          history: messages.slice(-6)
         })
       });
 
       if (!res.ok) throw new Error("Error del servidor");
 
       const data = await res.json();
-      
       const assistantMsg = { 
         role: "assistant", 
         content: data.reply,
         timestamp: new Date().toISOString(),
-        isUrgent: data.isUrgent
+        isUrgent: data.isUrgent,
+        usedData: data.usedData,
+        provider: data.provider
       };
       
       setMessages(prev => [...prev, assistantMsg]);
 
     } catch (err) {
       console.error("Error:", err);
-      setConnectionError(true);
       
       const errorMsg = { 
         role: "assistant", 
-        content: "💙 Lo siento, hay un problema de conexión. Por favor, intenta de nuevo. Si es urgente, contacta con el Teléfono de la Esperanza: 717 003 717",
+        content: "💙 Lo siento, hay un problema de conexión. Si es urgente, contacta con el Teléfono de la Esperanza: 717 003 717",
         timestamp: new Date().toISOString(),
         isError: true
       };
@@ -85,24 +86,19 @@ export default function Chat() {
     }
   }
 
-  function formatTime(timestamp) {
-    return new Date(timestamp).toLocaleTimeString('es-ES', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-  }
-
-  function quickSuggestions() {
+  function QuickSuggestions() {
     const suggestions = [
-      "¿Dónde buscar ayuda en España?",
-      "Estadísticas de salud mental",
-      "Recursos para crisis",
-      "Cómo apoyar a un familiar"
+      "¿Cuántos casos de depresión hay en Madrid?",
+      "Estadísticas de ansiedad por comunidad",
+      "Enfermedades más comunes en Cataluña",
+      "Comparar salud mental entre regiones"
     ];
 
     return (
       <div className="quick-suggestions">
-        <p className="suggestions-label">Puedes preguntar sobre:</p>
+        <p className="suggestions-label">
+          💡 Preguntas que activan consultas inteligentes a la base de datos:
+        </p>
         <div className="suggestions-grid">
           {suggestions.map((suggestion, index) => (
             <button
@@ -115,24 +111,32 @@ export default function Chat() {
             </button>
           ))}
         </div>
+        {systemInfo && (
+          <div className="system-info">
+            <small>
+              🤖 {systemInfo.ai_provider} | 
+              🗄️ {systemInfo.database} | 
+              🟢 {systemInfo.status}
+            </small>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
     <div className="chat-container">
-      {/* Header */}
+      {/* Header con info del sistema */}
       <div className="chat-header">
         <div className="chat-title">
-          <div className="avatar">💚</div>
+          <div className="avatar">🤖</div>
           <div>
-            <h2>Acompaña</h2>
-            <p className="subtitle">Asistente de salud mental España</p>
+            <h2>Acompaña Agentic</h2>
+            <p className="subtitle">IA + Oracle para salud mental España</p>
           </div>
         </div>
-        <div className="connection-status">
-          {connectionError && <span className="status-error">Sin conexión</span>}
-          {!connectionError && <span className="status-ok">Conectado</span>}
+        <div className="system-badge">
+          {systemInfo?.ai_provider && `Powered by ${systemInfo.ai_provider}`}
         </div>
       </div>
 
@@ -142,16 +146,26 @@ export default function Chat() {
           <div key={index} className={`message-wrapper ${msg.role}-message`}>
             <div className="message-content">
               {msg.role === "assistant" && (
-                <div className="message-avatar">💚</div>
+                <div className="message-avatar">🤖</div>
               )}
               <div className="message-bubble-container">
-                <div className={`message-bubble ${msg.isUrgent ? 'urgent' : ''} ${msg.isError ? 'error' : ''}`}>
+                <div className={`message-bubble ${msg.isUrgent ? 'urgent' : ''} ${msg.isError ? 'error' : ''} ${msg.usedData ? 'has-data' : ''}`}>
                   {msg.content.split('\n').map((line, i) => (
                     <p key={i} className="message-text">{line}</p>
                   ))}
+                  {msg.usedData && (
+                    <div className="agentic-badge">
+                      📊 Consulta inteligente a base de datos
+                    </div>
+                  )}
                 </div>
-                <div className="message-timestamp">
-                  {formatTime(msg.timestamp)}
+                <div className="message-metadata">
+                  <span className="message-timestamp">
+                    {new Date(msg.timestamp).toLocaleTimeString('es-ES')}
+                  </span>
+                  {msg.provider && (
+                    <span className="message-provider">{msg.provider}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -161,9 +175,10 @@ export default function Chat() {
         {loading && (
           <div className="message-wrapper assistant-message">
             <div className="message-content">
-              <div className="message-avatar">💚</div>
+              <div className="message-avatar">🤖</div>
               <div className="message-bubble-container">
                 <div className="message-bubble typing-indicator">
+                  <span>🤖 Generando consulta SQL y analizando datos...</span>
                   <span></span>
                   <span></span>
                   <span></span>
@@ -176,15 +191,15 @@ export default function Chat() {
         <div ref={endRef} />
       </div>
 
-      {/* Sugerencias rápidas (solo si no hay mensajes del usuario) */}
-      {messages.length === 1 && quickSuggestions()}
+      {/* Sugerencias para consultas agentic */}
+      {messages.length === 1 && <QuickSuggestions />}
 
       {/* Input */}
       <form onSubmit={sendMessage} className="input-container">
         <div className="input-wrapper">
           <input
             className="message-input"
-            placeholder="Escribe tu mensaje aquí..."
+            placeholder="Pregunta sobre datos de salud mental en España..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={loading}
@@ -196,12 +211,14 @@ export default function Chat() {
             disabled={!input.trim() || loading}
             aria-label="Enviar mensaje"
           >
-            {loading ? "⏳" : "💚"}
+            {loading ? "⏳" : "🤖"}
           </button>
         </div>
         <div className="input-footer">
           <span className="char-count">{input.length}/500</span>
-          <span className="security-notice">Conversación segura y privada</span>
+          <span className="security-notice">
+            🔒 Sistema agentic con Oracle + IA Generativa
+          </span>
         </div>
       </form>
 

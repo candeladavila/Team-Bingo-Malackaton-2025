@@ -1,7 +1,34 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import './LandingPage.css'
 
 const LandingPage = () => {
+  const navigate = useNavigate()
+
+  const navigateToDataVisualization = () => {
+    navigate('/data-visualization', { replace: false })
+    // Asegurar que la página se muestre desde el principio
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }, 100)
+  }
+
+  const navigateToDataFiltering = () => {
+    navigate('/data-filtering', { replace: false })
+    // Asegurar que la página se muestre desde el principio
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }, 100)
+  }
+
+  const navigateToChatbot = () => {
+    navigate('/chatbot', { replace: false })
+    // Asegurar que la página se muestre desde el principio
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }, 100)
+  }
+
   return (
     <div className="landing-page">
       {/* Puntos animados de fondo */}
@@ -139,9 +166,27 @@ const LandingPage = () => {
 Nuestra plataforma combina visualización avanzada, pensamiento analítico y modelos de IA para extraer insights relevantes que impulsen la investigación en salud mental.
             </p>
             <div className="tools-preview">
-              <div className="tool-icon">📊</div>
-              <div className="tool-icon">🔍</div>
-              <div className="tool-icon">🤖</div>
+              <div 
+                className="tool-icon clickable" 
+                onClick={navigateToDataFiltering}
+                title="Filtrado de Datos"
+              >
+                🔍
+              </div>
+              <div 
+                className="tool-icon clickable" 
+                onClick={navigateToDataVisualization}
+                title="Visualización de Datos"
+              >
+                📊
+              </div>
+              <div 
+                className="tool-icon clickable" 
+                onClick={navigateToChatbot}
+                title="Chatbot IA"
+              >
+                🤖
+              </div>
             </div>
           </div>
         </div>
