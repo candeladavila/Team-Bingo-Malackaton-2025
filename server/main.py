@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from services.patient_filter_service import PatientFilterService
+from services.visualization_service import VisualizationService
 
 app = FastAPI(title="Team Bingo Malackaton API", version="1.0.0")
 
@@ -15,8 +16,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Instanciar el servicio de filtrado
+# Instanciar los servicios
 filter_service = PatientFilterService()
+visualization_service = VisualizationService()
 
 # Modelos Pydantic
 class FilterRequest(BaseModel):
@@ -111,6 +113,40 @@ async def get_filter_options():
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener opciones de filtro: {str(e)}")
+
+# Endpoints de visualización
+@app.get("/api/visualization/age-pyramid")
+async def get_age_pyramid(diagnosis: str = Query(..., description="Diagnóstico para filtrar")):
+    """
+    Obtiene datos para pirámide poblacional por diagnóstico
+    """
+    try:
+        data = visualization_service.get_age_pyramid_data(diagnosis)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar pirámide poblacional: {str(e)}")
+
+@app.get("/api/visualization/age-histogram")
+async def get_age_histogram(diagnosis: str = Query(..., description="Diagnóstico para filtrar")):
+    """
+    Obtiene datos para histograma de distribución de edades por diagnóstico
+    """
+    try:
+        data = visualization_service.get_age_histogram_data(diagnosis)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar histograma de edades: {str(e)}")
+
+@app.get("/api/visualization/gender-distribution")
+async def get_gender_distribution(diagnosis: str = Query(..., description="Diagnóstico para filtrar")):
+    """
+    Obtiene datos para distribución por sexo por diagnóstico
+    """
+    try:
+        data = visualization_service.get_gender_distribution_data(diagnosis)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al generar distribución por sexo: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
