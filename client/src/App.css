@@ -24,7 +24,6 @@
 .tools-page,
 .data-filtering-page,
 .data-visualization-page,
-.chatbot-page,
 .about-page,
 .accessibility-config-page {
   width: 100%;
@@ -168,7 +167,6 @@
   .tools-page,
   .data-filtering-page,
   .data-visualization-page,
-  .chatbot-page,
   .about-page,
   .accessibility-config-page {
     padding: 15px;
@@ -189,7 +187,6 @@
   .tools-page,
   .data-filtering-page,
   .data-visualization-page,
-  .chatbot-page,
   .about-page,
   .accessibility-config-page {
     min-height: calc(100vh - 60px);
@@ -257,35 +254,55 @@
 }
 
 /* Soporte para modo oscuro */
-@media (prefers-color-scheme: dark) {
-  .App {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
-  }
-  
-  .page-header h1 {
-    color: #ffffff;
-  }
-  
-  .page-header p {
-    color: #e0e0e0;
-  }
-  
-  .features-preview h2 {
-    color: #ffffff;
-  }
-  
-  .feature-card {
-    background: #2a2a2a;
-    border-color: #444;
-  }
-  
-  .feature-card h3 {
-    color: #ffffff;
-  }
-  
-  .feature-card p {
-    color: #cccccc;
-  }
+/* Dark mode styles */
+.dark-mode {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
+  color: #ffffff;
+}
+
+.dark-mode .page-header h1 {
+  color: #ffffff;
+}
+
+.dark-mode .page-header p {
+  color: #e0e0e0;
+}
+
+.dark-mode .features-preview h2 {
+  color: #ffffff;
+}
+
+.dark-mode .feature-card {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+.dark-mode .feature-card h3 {
+  color: #ffffff;
+}
+
+.dark-mode .feature-card p {
+  color: #cccccc;
+}
+
+.dark-mode .accessibility-config-page .config-section {
+  background: #2a2a2a;
+  color: #ffffff;
+}
+
+.dark-mode .accessibility-config-page .keyboard-shortcuts-dropdown {
+  background: #2a2a2a;
+  color: #ffffff;
+}
+
+.dark-mode .accessibility-config-page kbd {
+  background: #444;
+  border-color: #555;
+  color: #ffffff;
+}
+
+.dark-mode .keyboard-shortcut-item {
+  border-bottom-color: #444;
 }
 
 /* Optimización para pantallas muy pequeñas */

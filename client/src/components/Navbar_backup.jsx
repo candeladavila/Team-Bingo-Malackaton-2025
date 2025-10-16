@@ -61,9 +61,9 @@ const Navbar = () => {
         <div className="navbar-menu">
           {/* Dropdown de Herramientas */}
           <div className="navbar-item dropdown" ref={dropdownRef}>
-            <button 
+              <button 
               className={`dropdown-toggle ${
-                ['/tools', '/data-filtering', '/data-visualization', '/chatbot'].some(path => 
+                ['/tools', '/data-filtering', '/data-visualization'].some(path => 
                   isActive(path)
                 ) ? 'active' : ''
               }`}
@@ -103,14 +103,7 @@ const Navbar = () => {
                   <span className="item-icon">📊</span>
                   Representación Gráfica
                 </Link>
-                <Link 
-                  to="/chatbot"
-                  className={`dropdown-item ${isActive('/chatbot') ? 'active' : ''}`}
-                  onClick={closeDropdown}
-                >
-                  <span className="item-icon">🤖</span>
-                  Chatbot
-                </Link>
+                {/* Chatbot link removed */}
               </div>
             )}
           </div>
