@@ -171,7 +171,7 @@ Nuestra plataforma combina visualización avanzada, pensamiento analítico y mod
                 onClick={navigateToDataFiltering}
                 title="Filtrado de Datos"
               >
-                �
+                🔍
               </div>
               <div 
                 className="tool-icon clickable" 
