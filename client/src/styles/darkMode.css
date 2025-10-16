@@ -1,0 +1,134 @@
+/* Estilos para modo oscuro */
+
+/* Estilos globales para modo oscuro */
+[data-theme='dark'] {
+  --bg-primary: #000000;
+  --bg-secondary: #ffffff;
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --border-color: #dddddd;
+}
+
+/* Landing Page y fondos */
+[data-theme='dark'] .landing-page {
+  background: var(--bg-primary);
+}
+
+[data-theme='dark'] .clean-page {
+  background: var(--bg-primary);
+  color: var(--bg-secondary);
+}
+
+/* Contenedores y cajas */
+[data-theme='dark'] .content-card,
+[data-theme='dark'] .filter-section,
+[data-theme='dark'] .results-section,
+[data-theme='dark'] .tool-category {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 5px 20px rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+}
+
+/* Texto y encabezados */
+[data-theme='dark'] h1,
+[data-theme='dark'] h2,
+[data-theme='dark'] h3,
+[data-theme='dark'] h4 {
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] p,
+[data-theme='dark'] span,
+[data-theme='dark'] label {
+  color: var(--text-secondary);
+}
+
+/* Tabla de resultados */
+[data-theme='dark'] .results-table {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] .results-table th {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-bottom-color: #404040;
+}
+
+[data-theme='dark'] .results-table td {
+  color: var(--text-secondary);
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme='dark'] .results-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Checkbox items */
+[data-theme='dark'] .checkbox-item {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] .checkbox-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+[data-theme='dark'] .checkbox-item:has(input:checked) {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+/* Grid containers */
+[data-theme='dark'] .comunidades-grid,
+[data-theme='dark'] .diagnosticos-grid,
+[data-theme='dark'] .sexo-grid,
+[data-theme='dark'] .centros-grid {
+  background: var(--bg-primary);
+  border-color: var(--border-color);
+}
+
+/* Range slider */
+[data-theme='dark'] .range-slider input[type="range"]::-webkit-slider-track {
+  background: linear-gradient(135deg, 
+    rgba(219, 112, 147, 0.4) 0%,
+    rgba(168, 85, 247, 0.4) 50%,
+    rgba(139, 92, 246, 0.4) 100%);
+}
+
+[data-theme='dark'] .range-slider input[type="range"]::-webkit-slider-thumb {
+  background: linear-gradient(135deg, 
+    rgba(219, 112, 147, 1) 0%,
+    rgba(168, 85, 247, 1) 100%);
+}
+
+/* Botones */
+[data-theme='dark'] .apply-filter-btn,
+[data-theme='dark'] .pagination-btn {
+  background: linear-gradient(135deg,
+    rgba(219, 112, 147, 0.8) 0%,
+    rgba(168, 85, 247, 0.8) 50%,
+    rgba(139, 92, 246, 0.8) 100%);
+  color: white;
+}
+
+[data-theme='dark'] .apply-filter-btn:hover,
+[data-theme='dark'] .pagination-btn:hover {
+  background: linear-gradient(135deg,
+    rgba(219, 112, 147, 1) 0%,
+    rgba(168, 85, 247, 1) 50%,
+    rgba(139, 92, 246, 1) 100%);
+}
+
+/* Mensajes y notificaciones */
+[data-theme='dark'] .error-message {
+  background: rgba(198, 40, 40, 0.2);
+  color: #ff6b6b;
+}
+
+[data-theme='dark'] .loading-message {
+  color: var(--text-secondary);
+}

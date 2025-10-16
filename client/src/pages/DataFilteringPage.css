@@ -662,6 +662,26 @@
   text-align: center;
 }
 
+/* Dark mode support */
+[data-theme='dark'] .clean-page {
+  background: #000000 !important;
+}
+
+[data-theme='dark'] .filter-section,
+[data-theme='dark'] .results-section {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+[data-theme='dark'] .filter-group h3 {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .checkbox-item {
+  background-color: #000000;
+  color: #ffffff;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .filter-section,

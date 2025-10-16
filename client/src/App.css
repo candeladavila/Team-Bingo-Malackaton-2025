@@ -253,56 +253,52 @@
   }
 }
 
-/* Soporte para modo oscuro */
-/* Dark mode styles */
-.dark-mode {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
+/* Modo oscuro global */
+[data-theme='dark'] .App {
+  background-color: #000000;
+}
+
+/* Contenedores de fondo blanco a negro */
+[data-theme='dark'] .feature-card,
+[data-theme='dark'] .config-section,
+[data-theme='dark'] .keyboard-shortcuts-dropdown {
+  background: #000000;
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+/* Todo el texto dentro de contenedores negros */
+[data-theme='dark'] .feature-card,
+[data-theme='dark'] .config-section,
+[data-theme='dark'] .keyboard-shortcuts-dropdown,
+[data-theme='dark'] .filter-section,
+[data-theme='dark'] .results-section,
+[data-theme='dark'] .white-rectangle {
   color: #ffffff;
 }
 
-.dark-mode .page-header h1 {
+/* Textos específicos */
+[data-theme='dark'] .feature-card h3,
+[data-theme='dark'] .feature-card p,
+[data-theme='dark'] .config-section h2,
+[data-theme='dark'] .config-section p,
+[data-theme='dark'] .keyboard-shortcut-item,
+[data-theme='dark'] .keyboard-shortcut-item span,
+[data-theme='dark'] .filter-section h2,
+[data-theme='dark'] .filter-section p,
+[data-theme='dark'] .filter-section label,
+[data-theme='dark'] .results-section h2,
+[data-theme='dark'] .results-section p,
+[data-theme='dark'] .white-rectangle h3,
+[data-theme='dark'] .white-rectangle p,
+[data-theme='dark'] .tool-card h3,
+[data-theme='dark'] .tool-card p {
   color: #ffffff;
 }
 
-.dark-mode .page-header p {
-  color: #e0e0e0;
-}
-
-.dark-mode .features-preview h2 {
+/* Textos en encabezados de página */
+[data-theme='dark'] .page-header h1,
+[data-theme='dark'] .page-header p {
   color: #ffffff;
-}
-
-.dark-mode .feature-card {
-  background: #2a2a2a;
-  border-color: #444;
-}
-
-.dark-mode .feature-card h3 {
-  color: #ffffff;
-}
-
-.dark-mode .feature-card p {
-  color: #cccccc;
-}
-
-.dark-mode .accessibility-config-page .config-section {
-  background: #2a2a2a;
-  color: #ffffff;
-}
-
-.dark-mode .accessibility-config-page .keyboard-shortcuts-dropdown {
-  background: #2a2a2a;
-  color: #ffffff;
-}
-
-.dark-mode .accessibility-config-page kbd {
-  background: #444;
-  border-color: #555;
-  color: #ffffff;
-}
-
-.dark-mode .keyboard-shortcut-item {
-  border-bottom-color: #444;
 }
 
 /* Optimización para pantallas muy pequeñas */
