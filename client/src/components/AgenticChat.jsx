@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 
 export default function AgenticChat() {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://insight-server-rose.vercel.app'
+  
   const [messages, setMessages] = useState(() => {
     const saved = sessionStorage.getItem("agentic-chat-history");
     return saved ? JSON.parse(saved) : [
@@ -19,7 +21,7 @@ export default function AgenticChat() {
 
   // Cargar información del sistema al inicio
   useEffect(() => {
-    fetch('/api/health')
+    fetch(`${API_BASE_URL}/api/health`)
       .then(res => res.json())
       .then(data => setSystemInfo(data))
       .catch(console.error);
@@ -47,7 +49,7 @@ export default function AgenticChat() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

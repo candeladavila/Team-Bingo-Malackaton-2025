@@ -44,7 +44,7 @@ const DataFilteringPage = () => {
   ]
 
   // API Base URL - obtiene de variable de entorno o usa valor por defecto
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001'
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://insight-server-rose.vercel.app'
 
   // Función para formatear fechas a DD/MM/YYYY
   const formatDate = (dateString) => {
