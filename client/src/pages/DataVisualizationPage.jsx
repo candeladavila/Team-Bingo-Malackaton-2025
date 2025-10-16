@@ -23,6 +23,7 @@ ChartJS.register(
 )
 
 const DataVisualizationPage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001'
   const [chartType, setChartType] = useState('pyramid')
   const [selectedDiagnosis, setSelectedDiagnosis] = useState('')
   const [diagnoses, setDiagnoses] = useState([])
@@ -91,7 +92,7 @@ const DataVisualizationPage = () => {
 
   const fetchDiagnoses = async () => {
     try {
-      const response = await fetch('http://localhost:8001/api/filter-options')
+      const response = await fetch(`${API_BASE_URL}/api/filter-options`)
       const data = await response.json()
       setDiagnoses(data.diagnosticos || [])
       if (data.diagnosticos && data.diagnosticos.length > 0) {
@@ -113,10 +114,10 @@ const DataVisualizationPage = () => {
       let endpoint = ''
       switch (chartType) {
         case 'pyramid':
-          endpoint = `http://localhost:8001/api/visualization/age-pyramid?diagnosis=${encodeURIComponent(selectedDiagnosis)}`
+          endpoint = `${API_BASE_URL}/api/visualization/age-pyramid?diagnosis=${encodeURIComponent(selectedDiagnosis)}`
           break
         case 'gender-pie':
-          endpoint = `http://localhost:8001/api/visualization/age-pyramid?diagnosis=${encodeURIComponent(selectedDiagnosis)}`
+          endpoint = `${API_BASE_URL}/api/visualization/age-pyramid?diagnosis=${encodeURIComponent(selectedDiagnosis)}`
           break
         default:
           break
